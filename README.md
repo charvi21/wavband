@@ -20,3 +20,7 @@ Youtube Tutorials:
 # Setup
 
 I set my JS up with VSCode Editor with the p5.vscode extension. You'd need to download p5 off the website, and then download vscode. 
+
+# Git Workflow
+MAKE A NEW BRANCH BEFORE YOU CHANGE SHIT :)
+MAKE SURE CODE IS TESTED BEFORE MERGING <3

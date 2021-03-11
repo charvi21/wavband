@@ -28,13 +28,13 @@ const correctiontext = 'correction mode';
 const adjustmentstext = 'reference signal';
 let loggrid;
 
-let lw = 1105.76;
-let lh = 150;
-let sx = 105;
+let lw = 1065;
+let lh = 90;
+let sx = 120;
 
 let ex = sx + lw;
 
-let ey = 175;
+let ey = 220;
 let sy = ey + lh;
 
 
@@ -63,7 +63,7 @@ function preload() {
 
 function setup() {
     let cnv = createCanvas(windowWidth, windowHeight);
-    //cnv.background(0, 255, 255);
+    cnv.background('white');
     cnv.mouseClicked(togglePlay);
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
@@ -135,7 +135,7 @@ function drawBackground() {
     text(settingstext, 575, 55);
     text(helptext, 775, 55);
 
-    fill(217, 247, 192);
+    fill(217, 247, 192); //green
     ellipse(470, 155, 20, 20);
 
 
@@ -143,7 +143,7 @@ function drawBackground() {
     fill(105, 105, 109);
     text(inputtext, 140, 163);
 
-    fill(192, 244, 247);
+    fill(192, 244, 247); //blue
     ellipse(300, 155, 20, 20);
 
     textSize(20);
@@ -186,14 +186,14 @@ function draw() {
     rect(100, 175, 1105.76, 285);
     fill('white');
 
-    tint(250, 240);
+    //tint(250, 240);
     image(loggrid, 100, 175);
 
 
-    rect(100, 575, 1105.76, 285);
+    //rect(100, 575, 1105.76, 285);
     // fill(247, 195, 192);
 
-    tint(250, 240);
+    //tint(250, 240);
     image(loggrid, 100, 575);
 
     if (filtered.isPlaying()) {
@@ -273,7 +273,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw micData signal
     noStroke();
-    fill(222, 192, 247);
+    //fill(222, 192, 247);
     let px = map(0, 0, Math.log10(micDataFFT.length), sx, ex);
     let py = map(micDataFFT[0], -140, 0, sy, ey);
     ellipse(px, py, 5);
@@ -300,7 +300,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw filtered signal
     noStroke();
-    fill(192, 244, 247);
+    // fill(192, 244, 247);
     px = map(0, 0, Math.log10(filteredFFT.length), sx, ex);
     py = map(filteredFFT[0], -140, 0, sy, ey);
     ellipse(px, py, 5);
@@ -323,7 +323,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw ref signal
     noStroke();
-    fill(217, 247, 192);
+    //fill(217, 247, 192);
     px = map(0, 0, Math.log10(refFFT.length), sx, ex);
     py = map(refFFT[0], -140, 0, sy, ey);
     ellipse(px, py, 5);

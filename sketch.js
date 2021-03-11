@@ -21,22 +21,21 @@ let inputcolour;
 let outputcolour;
 let correctioncolour;
 let adjustmentscolour;
-const inputtext = 'input';
+const inputtext = 'mic input';
 const outputtext = 'output';
 let correctionisOn = true;
 const correctiontext = 'correction mode';
-const adjustmentstext = 'adjustments filter';
+const adjustmentstext = 'reference signal';
 let loggrid;
 
-let lw = 1250;
-let lh = 70;
-let sx = 125;
-let ex = sx + lw;
-let ey = 190;
-let sy = ey + lh;
+let lw = 1105.76;
+let lh = 150;
+let sx = 105;
 
-let eyEQ = 500;
-let syEQ = ey + lh;
+let ex = sx + lw;
+
+let ey = 175;
+let sy = ey + lh;
 
 
 let eqLength = 3;
@@ -119,9 +118,9 @@ function setupEQ() {
 
 function drawBackground() {
     image(logo, 30, 5);
-    image(headphonesym, 1550, 15);
-    image(batt, 1625, 15);
-    image(statusgreen, 1573, 35);
+    image(headphonesym, 1050, 15);
+    image(batt, 1125, 15);
+    image(statusgreen, 1073, 35);
 
     textFont(font);
 
@@ -137,7 +136,8 @@ function drawBackground() {
     text(helptext, 775, 55);
 
     fill(217, 247, 192);
-    ellipse(120, 155, 20, 20);
+    ellipse(470, 155, 20, 20);
+
 
     textSize(20);
     fill(105, 105, 109);
@@ -150,25 +150,32 @@ function drawBackground() {
     fill(105, 105, 109);
     text(outputtext, 320, 163);
 
+
+
+    //liht purple
+    fill(222, 192, 247);
+    ellipse(120, 155, 20, 20);
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(adjustmentstext, 490, 163);
+
+    //button toggle
+
     fill(247, 195, 192);
-    rect(470, 145, 40, 20, 50);
+    rect(720, 145, 40, 20, 50);
 
     fill(231, 231, 231);
-    ellipse(480, 155, 20, 20);
+    ellipse(730, 155, 20, 20);
 
-
-    textSize(20);
-    fill(105, 105, 109);
-    text(correctiontext, 520, 163);
-
-
-    fill(222, 192, 247);
-    ellipse(120, 555, 20, 20);
 
 
     textSize(20);
     fill(105, 105, 109);
-    text(inputtext, 140, 555 + (163 - 155));
+    text(correctiontext, 770, 163);
+
+
+
 }
 
 function draw() {
@@ -176,18 +183,18 @@ function draw() {
     //background(220);
     //fill(155, 137, 138);
     //placeholders for plots
-    rect(100, 175, 1300, 200);
-    fill(247, 195, 192);
+    rect(100, 175, 1105.76, 285);
+    fill('white');
 
     tint(250, 240);
-    image(loggrid, 100, 175, 1300, 200);
+    image(loggrid, 100, 175);
 
 
-    rect(100, 575, 1300, 200);
-    fill(247, 195, 192);
+    rect(100, 575, 1105.76, 285);
+    // fill(247, 195, 192);
 
     tint(250, 240);
-    image(loggrid, 100, 575, 1300, 200);
+    image(loggrid, 100, 575);
 
     if (filtered.isPlaying()) {
         analyzeNodes();

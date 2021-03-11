@@ -9,9 +9,6 @@
 //     //return the object
 // }
 
-let eq, soundFile
-let eqBandIndex = 0;
-let eqBandNames = ['lows', 'mids', 'highs'];
 let logo;
 let headphonesym;
 let batt;
@@ -31,6 +28,14 @@ const correctiontext = 'correction mode';
 const adjustmentstext = 'adjustments filter';
 let loggrid;
 
+let lw = 1200;
+let lh = 95;
+let sx = 150;
+let ex = sx + lw;
+let sy = 175 + lh;
+let ey = 175;
+
+
 let eqLength = 3;
 let ref;
 
@@ -44,7 +49,7 @@ function preload() {
     font = loadFont('assets/abeatbyKaiRegular.otf');
 
     loggrid = loadImage('assets/loggrid.png');
-  
+
     filtered = loadSound('ddaeng.wav');
     ref = loadSound('ddaeng.wav');
     testMicData = loadSound('ddaeng.wav');
@@ -58,102 +63,10 @@ function setup() {
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
 
-
-    eq = new p5.EQ(eqBandNames.length);
-    soundFile.disconnect();
-    eq.process(soundFile);
-
-    loadImage('assets/logo.jpg', logo => {
-        // image(logo, 0, 0);
-    });
-
-    loadImage('assets/headphonesym.jpg', headphonesym => {
-        // image(headphonesym, 1525, 15);
-    });
-
-    loadImage('assets/batt.png', batt => {
-        // image(batt, 1650, 15);
-    });
-
-    loadImage('assets/statusgreen.png', statusgreen => {
-        // image(statusgreen, 1600, 15);
-    });
-
-    loadImage('assets/loggrid.png', loggrid => {
-        //resize(100, 50);
-        //image(loggrid, 100, 175);
-
-    });
-
-
-    image(logo, 30, 5);
-    image(headphonesym, 1550, 15);
-    image(batt, 1625, 15);
-    image(statusgreen, 1573, 35);
-
-    textFont(font);
-
-    textSize(20);
-    fill(247, 195, 192);
-    text(hometext, 400, 55);
-    stroke(247, 195, 192);
-    strokeWeight(2); // line colour
-    line(400, 70, 475, 70);
-    strokeWeight(0); // reset so it doesnt show up on text
-    fill(105, 105, 109);
-    text(settingstext, 575, 55);
-    text(helptext, 775, 55);
-
-    //placeholders for plots
-    rect(100, 175, 1300, 200);
-    fill(247, 195, 192);
-
-    tint(250, 240);
-    image(loggrid, 100, 175, 1300, 200);
-
-
-    rect(100, 575, 1300, 200);
-    fill(247, 195, 192);
-
-    tint(250, 240);
-    image(loggrid, 100, 575, 1300, 200);
-
-    fill(217, 247, 192);
-    inputcolour = circle(120, 155, 20, 20);
-
-    textSize(20);
-    fill(105, 105, 109);
-    text(inputtext, 140, 163);
-
-    fill(192, 244, 247);
-    outputcolour = circle(300, 155, 20, 20);
-
-    textSize(20);
-    fill(105, 105, 109);
-    text(outputtext, 320, 163);
-
-    fill(247, 195, 192);
-    rect(470, 145, 40, 20, 50);
-
-    fill(231, 231, 231);
-    correctioncolour = circle(480, 155, 20, 20);
-
-
-    textSize(20);
-    fill(105, 105, 109);
-    text(correctiontext, 520, 163);
-
-
-    fill(222, 192, 247);
-    adjustmentscolour = circle(120, 555, 20, 20);
-
-
-    textSize(20);
-    fill(105, 105, 109);
-    text(inputtext, 140, 555 + (163 - 155));
+    drawBackground();
 
     //CHARVI's STUFF
-  
+
     //setup test mic data
     fil = new p5.Filter();
     fil.freq(2880);
@@ -179,26 +92,90 @@ function setup() {
 
 }
 
+function drawBackground() {
+    image(logo, 30, 5);
+    image(headphonesym, 1550, 15);
+    image(batt, 1625, 15);
+    image(statusgreen, 1573, 35);
+
+    textFont(font);
+
+    textSize(20);
+    fill(247, 195, 192);
+    text(hometext, 400, 55);
+    stroke(247, 195, 192);
+    strokeWeight(2); // line colour
+    line(400, 70, 475, 70);
+    strokeWeight(0); // reset so it doesnt show up on text
+    fill(105, 105, 109);
+    text(settingstext, 575, 55);
+    text(helptext, 775, 55);
+
+    fill(217, 247, 192);
+    ellipse(120, 155, 20, 20);
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(inputtext, 140, 163);
+
+    fill(192, 244, 247);
+    ellipse(300, 155, 20, 20);
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(outputtext, 320, 163);
+
+    fill(247, 195, 192);
+    rect(470, 145, 40, 20, 50);
+
+    fill(231, 231, 231);
+    ellipse(480, 155, 20, 20);
+
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(correctiontext, 520, 163);
+
+
+    fill(222, 192, 247);
+    ellipse(120, 555, 20, 20);
+
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(inputtext, 140, 555 + (163 - 155));
+}
+
 function draw() {
 
-  background(220);
+    //background(220);
+    //fill(155, 137, 138);
+    //placeholders for plots
+    rect(100, 175, 1300, 200);
+    fill(247, 195, 192);
+
+    tint(250, 240);
+    image(loggrid, 100, 175, 1300, 200);
+
+
+    rect(100, 575, 1300, 200);
+    fill(247, 195, 192);
+
+    tint(250, 240);
+    image(loggrid, 100, 575, 1300, 200);
 
     if (filtered.isPlaying()) {
         analyzeNodes();
-    } else {
-
-        stroke(0);
-        text('tap to play', 20, 20);
     }
 
 }
 
-function mouseClicked() {
-    if (dist(480, 148, mouseX, mouseY) < radius) {
-        if (isOn == true) isOn = false;
-        else isOn = true;
-    }
-}
+// function mouseClicked() {
+//     if (dist(480, 148, mouseX, mouseY) < radius) {
+//         if (isOn == true) isOn = false;
+//         else isOn = true;
+//     }
+// }
 
 function togglePlay() {
     if (filtered.isPlaying()) {
@@ -272,19 +249,22 @@ function adjustFilterGains(vals) {
 
 function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
+
     //draw micData signal
     noStroke();
-    fill(255, 0, 25);
-    let px = 0;
-    let py = micDataFFT[0];
+    fill(222, 192, 247);
+    let px = sx;
+    let py = map(micDataFFT[0], -140, 0, sy, ey);
     for (let i = 0; i < micDataFFT.length; i++) {
         if (i % 100 == 0) {
-            let x = map(i, 0, micDataFFT.length, 0, width);
-            let h = map(micDataFFT[i], -140, 0, height, 0);
+            let x = map(i, 0, micDataFFT.length, sx, ex);
+            let h = map(micDataFFT[i], -140, 0, sy, ey);
 
             //let x = i * (width / (micDataFFT.length - 1));
-            ellipse(x, h, 3);
-            stroke(255, 0, 25);
+            ellipse(x, h, 5);
+
+            stroke(222, 192, 247);
+            strokeWeight(3);
             line(px, py, x, h);
 
             px = x;
@@ -295,16 +275,18 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw filtered signal
     noStroke();
-    fill(40, 0, 200);
-    px = 0;
-    py = filteredFFT[0];
+    fill(192, 244, 247);
+    px = sx;
+    py = map(filteredFFT[0], -140, 0, sy, ey);;
     for (let i = 0; i < filteredFFT.length; i++) {
         if (i % 100 == 0) {
-            let x = map(i, 0, filteredFFT.length, 0, width);
-            let h = map(filteredFFT[i], -140, 0, height, 0);
+            let x = map(i, 0, filteredFFT.length, sx, ex);
+            let h = map(filteredFFT[i], -140, 0, sy, ey);
 
-            ellipse(x, h, 3);
-            stroke(40, 0, 200);
+            ellipse(x, h, 5);
+
+            stroke(192, 244, 247);
+            strokeWeight(3);
             line(px, py, x, h);
 
             px = x;
@@ -314,16 +296,18 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw ref signal
     noStroke();
-    fill(40, 250, 0);
-    px = 0;
-    py = refFFT[0];
+    fill(217, 247, 192);
+    px = sx;
+    py = map(refFFT[0], -140, 0, sy, ey);
     for (let i = 0; i < refFFT.length; i++) {
         if (i % 100 == 0) {
-            let x = map(i, 0, refFFT.length, 0, width);
-            let h = map(refFFT[i], -140, 0, height, 0);
+            let x = map(i, 0, refFFT.length, sx, ex);
+            let h = map(refFFT[i], -140, 0, sy, ey);
 
-            ellipse(x, h, 3);
-            stroke(40, 250, 0);
+            ellipse(x, h, 5);
+
+            stroke(217, 247, 192);
+            strokeWeight(3);
             line(px, py, x, h);
 
             px = x;

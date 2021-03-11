@@ -9,20 +9,151 @@
 //     //return the object
 // }
 
+let eq, soundFile
+let eqBandIndex = 0;
+let eqBandNames = ['lows', 'mids', 'highs'];
+let logo;
+let headphonesym;
+let batt;
+let statusgreen;
+const hometext = 'home';
+const settingstext = 'settings';
+const helptext = 'help';
+let font;
+let inputcolour;
+let outputcolour;
+let correctioncolour;
+let adjustmentscolour;
+const inputtext = 'input';
+const outputtext = 'output';
+let correctionisOn = true;
+const correctiontext = 'correction mode';
+const adjustmentstext = 'adjustments filter';
+let loggrid;
+
 let eqLength = 3;
 let ref;
 
 function preload() {
+
+    logo = loadImage('assets/logo.png');
+    headphonesym = loadImage('assets/headphonesym.png');
+    batt = loadImage('assets/batt.png');
+    statusgreen = loadImage('assets/statusgreen.png');
+
+    font = loadFont('assets/abeatbyKaiRegular.otf');
+
+    loggrid = loadImage('assets/loggrid.png');
+  
     filtered = loadSound('ddaeng.wav');
     ref = loadSound('ddaeng.wav');
     testMicData = loadSound('ddaeng.wav');
+
 }
 
 function setup() {
-    let cnv = createCanvas(500, 500);
+    let cnv = createCanvas(windowWidth, windowHeight);
+    //cnv.background(0, 255, 255);
     cnv.mouseClicked(togglePlay);
+    // cnv.position(80, 150);
+    // cnv.parent('canvas-area');
 
 
+    eq = new p5.EQ(eqBandNames.length);
+    soundFile.disconnect();
+    eq.process(soundFile);
+
+    loadImage('assets/logo.jpg', logo => {
+        // image(logo, 0, 0);
+    });
+
+    loadImage('assets/headphonesym.jpg', headphonesym => {
+        // image(headphonesym, 1525, 15);
+    });
+
+    loadImage('assets/batt.png', batt => {
+        // image(batt, 1650, 15);
+    });
+
+    loadImage('assets/statusgreen.png', statusgreen => {
+        // image(statusgreen, 1600, 15);
+    });
+
+    loadImage('assets/loggrid.png', loggrid => {
+        //resize(100, 50);
+        //image(loggrid, 100, 175);
+
+    });
+
+
+    image(logo, 30, 5);
+    image(headphonesym, 1550, 15);
+    image(batt, 1625, 15);
+    image(statusgreen, 1573, 35);
+
+    textFont(font);
+
+    textSize(20);
+    fill(247, 195, 192);
+    text(hometext, 400, 55);
+    stroke(247, 195, 192);
+    strokeWeight(2); // line colour
+    line(400, 70, 475, 70);
+    strokeWeight(0); // reset so it doesnt show up on text
+    fill(105, 105, 109);
+    text(settingstext, 575, 55);
+    text(helptext, 775, 55);
+
+    //placeholders for plots
+    rect(100, 175, 1300, 200);
+    fill(247, 195, 192);
+
+    tint(250, 240);
+    image(loggrid, 100, 175, 1300, 200);
+
+
+    rect(100, 575, 1300, 200);
+    fill(247, 195, 192);
+
+    tint(250, 240);
+    image(loggrid, 100, 575, 1300, 200);
+
+    fill(217, 247, 192);
+    inputcolour = circle(120, 155, 20, 20);
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(inputtext, 140, 163);
+
+    fill(192, 244, 247);
+    outputcolour = circle(300, 155, 20, 20);
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(outputtext, 320, 163);
+
+    fill(247, 195, 192);
+    rect(470, 145, 40, 20, 50);
+
+    fill(231, 231, 231);
+    correctioncolour = circle(480, 155, 20, 20);
+
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(correctiontext, 520, 163);
+
+
+    fill(222, 192, 247);
+    adjustmentscolour = circle(120, 555, 20, 20);
+
+
+    textSize(20);
+    fill(105, 105, 109);
+    text(inputtext, 140, 555 + (163 - 155));
+
+    //CHARVI's STUFF
+  
     //setup test mic data
     fil = new p5.Filter();
     fil.freq(2880);
@@ -49,7 +180,8 @@ function setup() {
 }
 
 function draw() {
-    background(220);
+
+  background(220);
 
     if (filtered.isPlaying()) {
         analyzeNodes();
@@ -59,6 +191,13 @@ function draw() {
         text('tap to play', 20, 20);
     }
 
+}
+
+function mouseClicked() {
+    if (dist(480, 148, mouseX, mouseY) < radius) {
+        if (isOn == true) isOn = false;
+        else isOn = true;
+    }
 }
 
 function togglePlay() {

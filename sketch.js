@@ -75,7 +75,6 @@ function setup() {
     testMicData.connect(fil);
     fil.disconnect();
 
-
     eq = new p5.EQ(eqLength);
     filtered.disconnect();
     eq.process(filtered);

@@ -84,6 +84,7 @@ const outputtext = 'output';
 let correctionisOn = true;
 const correctiontext = 'correction mode';
 const adjustmentstext = 'adjustments filter';
+let loggrid;
 
 function preload() {
     soundFile = loadSound('ddaeng.wav');
@@ -93,6 +94,8 @@ function preload() {
     statusgreen = loadImage('assets/statusgreen.png');
 
     font = loadFont('assets/abeatbyKaiRegular.otf');
+
+    loggrid = loadImage('assets/loggrid.png');
 
 }
 
@@ -124,6 +127,13 @@ function setup() {
         // image(statusgreen, 1600, 15);
     });
 
+    loadImage('assets/loggrid.png', loggrid => {
+        //resize(100, 50);
+        //image(loggrid, 100, 175);
+
+    });
+
+
     image(logo, 30, 5);
     image(headphonesym, 1550, 15);
     image(batt, 1625, 15);
@@ -146,8 +156,15 @@ function setup() {
     rect(100, 175, 1300, 200);
     fill(247, 195, 192);
 
+    tint(250, 240);
+    image(loggrid, 100, 175, 1300, 200);
+
+
     rect(100, 575, 1300, 200);
     fill(247, 195, 192);
+
+    tint(250, 240);
+    image(loggrid, 100, 575, 1300, 200);
 
     fill(217, 247, 192);
     inputcolour = circle(120, 155, 20, 20);

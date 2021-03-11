@@ -63,6 +63,7 @@ function setup() {
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
 
+<<<<<<< HEAD
     drawBackground();
 
     //CHARVI's STUFF
@@ -75,6 +76,15 @@ function setup() {
     testMicData.connect(fil);
     fil.disconnect();
 
+=======
+    loadImage('assets/logo.png', logo => {
+        // image(logo, 0, 0);
+    });
+
+    loadImage('assets/headphonesym.png', headphonesym => {
+        // image(headphonesym, 1525, 15);
+    });
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     eq = new p5.EQ(eqLength);
     filtered.disconnect();
@@ -84,8 +94,14 @@ function setup() {
     fft.setInput(ref);
     ref.disconnect();
 
+<<<<<<< HEAD
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
+=======
+    loadImage('assets/loggrid2.png', loggrid => {
+        //resize(100, 50);
+        //image(loggrid, 100, 175);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     fftMic = new p5.FFT();
     fftMic.setInput(fil);
@@ -112,14 +128,22 @@ function drawBackground() {
     text(helptext, 775, 55);
 
     fill(217, 247, 192);
+<<<<<<< HEAD
     ellipse(120, 155, 20, 20);
+=======
+    inputcolour = ellipse(120, 155, 20, 20);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     textSize(20);
     fill(105, 105, 109);
     text(inputtext, 140, 163);
 
     fill(192, 244, 247);
+<<<<<<< HEAD
     ellipse(300, 155, 20, 20);
+=======
+    outputcolour = ellipse(300, 155, 20, 20);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     textSize(20);
     fill(105, 105, 109);
@@ -129,7 +153,11 @@ function drawBackground() {
     rect(470, 145, 40, 20, 50);
 
     fill(231, 231, 231);
+<<<<<<< HEAD
     ellipse(480, 155, 20, 20);
+=======
+    correctioncolour = ellipse(480, 155, 20, 20);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
 
     textSize(20);
@@ -138,7 +166,11 @@ function drawBackground() {
 
 
     fill(222, 192, 247);
+<<<<<<< HEAD
     ellipse(120, 555, 20, 20);
+=======
+    adjustmentscolour = ellipse(120, 555, 20, 20);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
 
     textSize(20);
@@ -146,7 +178,28 @@ function drawBackground() {
     text(inputtext, 140, 555 + (163 - 155));
 }
 
+<<<<<<< HEAD
 function draw() {
+=======
+    //CHARVI's STUFF
+
+    //setup test mic data
+    fil = new p5.Filter();
+    fil.freq(2880);
+    fil.gain(-20);
+    testMicData.disconnect();
+    testMicData.connect(fil);
+    fil.disconnect();
+
+
+    eq = new p5.EQ(eqLength);
+    filtered.disconnect();
+    eq.process(filtered);
+
+    fft = new p5.FFT();
+    fft.setInput(ref);
+    ref.disconnect();
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     //background(220);
     //fill(155, 137, 138);
@@ -161,8 +214,13 @@ function draw() {
     rect(100, 575, 1300, 200);
     fill(247, 195, 192);
 
+<<<<<<< HEAD
     tint(250, 240);
     image(loggrid, 100, 575, 1300, 200);
+=======
+    //background(220);
+    fill(155, 137, 138);
+>>>>>>> 0a0779f (edits to UI + fixes from charvi)
 
     if (filtered.isPlaying()) {
         analyzeNodes();

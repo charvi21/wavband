@@ -44,7 +44,7 @@ function preload() {
     font = loadFont('assets/abeatbyKaiRegular.otf');
 
     loggrid = loadImage('assets/loggrid.png');
-  
+
     filtered = loadSound('ddaeng.wav');
     ref = loadSound('ddaeng.wav');
     testMicData = loadSound('ddaeng.wav');
@@ -58,16 +58,11 @@ function setup() {
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
 
-
-    eq = new p5.EQ(eqBandNames.length);
-    soundFile.disconnect();
-    eq.process(soundFile);
-
-    loadImage('assets/logo.jpg', logo => {
+    loadImage('assets/logo.png', logo => {
         // image(logo, 0, 0);
     });
 
-    loadImage('assets/headphonesym.jpg', headphonesym => {
+    loadImage('assets/headphonesym.png', headphonesym => {
         // image(headphonesym, 1525, 15);
     });
 
@@ -79,7 +74,7 @@ function setup() {
         // image(statusgreen, 1600, 15);
     });
 
-    loadImage('assets/loggrid.png', loggrid => {
+    loadImage('assets/loggrid2.png', loggrid => {
         //resize(100, 50);
         //image(loggrid, 100, 175);
 
@@ -119,14 +114,14 @@ function setup() {
     image(loggrid, 100, 575, 1300, 200);
 
     fill(217, 247, 192);
-    inputcolour = circle(120, 155, 20, 20);
+    inputcolour = ellipse(120, 155, 20, 20);
 
     textSize(20);
     fill(105, 105, 109);
     text(inputtext, 140, 163);
 
     fill(192, 244, 247);
-    outputcolour = circle(300, 155, 20, 20);
+    outputcolour = ellipse(300, 155, 20, 20);
 
     textSize(20);
     fill(105, 105, 109);
@@ -136,7 +131,7 @@ function setup() {
     rect(470, 145, 40, 20, 50);
 
     fill(231, 231, 231);
-    correctioncolour = circle(480, 155, 20, 20);
+    correctioncolour = ellipse(480, 155, 20, 20);
 
 
     textSize(20);
@@ -145,7 +140,7 @@ function setup() {
 
 
     fill(222, 192, 247);
-    adjustmentscolour = circle(120, 555, 20, 20);
+    adjustmentscolour = ellipse(120, 555, 20, 20);
 
 
     textSize(20);
@@ -153,7 +148,7 @@ function setup() {
     text(inputtext, 140, 555 + (163 - 155));
 
     //CHARVI's STUFF
-  
+
     //setup test mic data
     fil = new p5.Filter();
     fil.freq(2880);
@@ -181,24 +176,21 @@ function setup() {
 
 function draw() {
 
-  background(220);
+    //background(220);
+    fill(155, 137, 138);
 
     if (filtered.isPlaying()) {
         analyzeNodes();
-    } else {
-
-        stroke(0);
-        text('tap to play', 20, 20);
     }
 
 }
 
-function mouseClicked() {
-    if (dist(480, 148, mouseX, mouseY) < radius) {
-        if (isOn == true) isOn = false;
-        else isOn = true;
-    }
-}
+// function mouseClicked() {
+//     if (dist(480, 148, mouseX, mouseY) < radius) {
+//         if (isOn == true) isOn = false;
+//         else isOn = true;
+//     }
+// }
 
 function togglePlay() {
     if (filtered.isPlaying()) {

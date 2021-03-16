@@ -28,18 +28,21 @@ const correctiontext = 'correction mode';
 const adjustmentstext = 'reference signal';
 let loggrid;
 
-let lw = 1105.76;
-let lh = 150;
-let sx = 105;
+let lw = 1065;
+let lh = 90;
+let sx = 120;
 
 let ex = sx + lw;
 
-let ey = 175;
+let ey = 220;
 let sy = ey + lh;
 
 
 let eqLength = 3;
 let ref;
+const lFreq = 20;
+const hFreq = 20000;
+let ranges = [];
 
 function preload() {
 
@@ -60,7 +63,7 @@ function preload() {
 
 function setup() {
     let cnv = createCanvas(windowWidth, windowHeight);
-    //cnv.background(0, 255, 255);
+    cnv.background('white');
     cnv.mouseClicked(togglePlay);
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
@@ -78,18 +81,38 @@ function setup() {
     fil.disconnect();
 
     eq = new p5.EQ(eqLength);
+    setupEQ();
     filtered.disconnect();
     eq.process(filtered);
 
     fft = new p5.FFT();
     fft.setInput(ref);
     ref.disconnect();
+    print(fft);
 
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
 
     fftMic = new p5.FFT();
     fftMic.setInput(fil);
+
+}
+
+function setupEQ() {
+    let BW = Math.log10(hFreq / lFreq) / eqLength;
+    let cfreq = 0;
+    let h = 0;
+    let l = 0;
+
+    for (let i = 0; i < eqLength; i++) {
+        cfreq = pow(10, Math.log10(lFreq) + BW * (i + 0.5));
+        eq.bands[i].freq(cfreq);
+
+        h = pow(10, Math.log10(cfreq) + (BW / 2));
+        l = pow(10, Math.log10(cfreq) - (BW / 2));
+        ranges.push({ high: h, low: l });
+
+    }
 
 }
 
@@ -112,7 +135,7 @@ function drawBackground() {
     text(settingstext, 575, 55);
     text(helptext, 775, 55);
 
-    fill(217, 247, 192);
+    fill(217, 247, 192); //green
     ellipse(470, 155, 20, 20);
 
 
@@ -120,7 +143,7 @@ function drawBackground() {
     fill(105, 105, 109);
     text(inputtext, 140, 163);
 
-    fill(192, 244, 247);
+    fill(192, 244, 247); //blue
     ellipse(300, 155, 20, 20);
 
     textSize(20);
@@ -163,14 +186,14 @@ function draw() {
     rect(100, 175, 1105.76, 285);
     fill('white');
 
-    tint(250, 240);
+    //tint(250, 240);
     image(loggrid, 100, 175);
 
 
-    rect(100, 575, 1105.76, 285);
+    //rect(100, 575, 1105.76, 285);
     // fill(247, 195, 192);
 
-    tint(250, 240);
+    //tint(250, 240);
     image(loggrid, 100, 575);
 
     if (filtered.isPlaying()) {
@@ -215,21 +238,11 @@ function analyzeNodes() {
 
     for (var i = 0; i < eqLength; i++) {
 
-        if (i == 0) {
-            low = 20;
-            high = 400;
-        } else if (i == 1) {
-            low = 400;
-            high = 2600;
-        } else {
-            low = 2600;
-            high = 14000;
-        }
+        low = ranges[i].low;
+        high = ranges[i].high;
 
         let refEnergy = fft.getEnergy(low, high);
-        //print("REF: ", refEnergy);
         let micEnergy = fftMic.getEnergy(low, high);
-        //print("MIC: ", micEnergy);
 
         vals[i] = refEnergy - micEnergy;
         gains[i] = eq.bands[i].gain();
@@ -248,7 +261,7 @@ function adjustFilterGains(vals) {
 
     for (var i = 0; i < eqLength; i++) {
 
-        if (vals[i] != Infinity) {
+        if (vals[i] != Infinity || vals[i] != -Infinity) {
             eq.bands[i].gain(vals[i]);
         }
 
@@ -258,18 +271,19 @@ function adjustFilterGains(vals) {
 
 function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
-
     //draw micData signal
     noStroke();
-    fill(222, 192, 247);
-    let px = sx;
+    //fill(222, 192, 247);
+    let px = map(0, 0, Math.log10(micDataFFT.length), sx, ex);
     let py = map(micDataFFT[0], -140, 0, sy, ey);
-    for (let i = 0; i < micDataFFT.length; i++) {
-        if (i % 100 == 0) {
-            let x = map(i, 0, micDataFFT.length, sx, ex);
+    ellipse(px, py, 5);
+
+    for (let i = 1; i <= micDataFFT.length; i++) {
+
+        if (i < 5 || i % 50 == 0) {
+            let x = map(Math.log10(i), 0, Math.log10(micDataFFT.length), sx, ex);
             let h = map(micDataFFT[i], -140, 0, sy, ey);
 
-            //let x = i * (width / (micDataFFT.length - 1));
             ellipse(x, h, 5);
 
             stroke(222, 192, 247);
@@ -282,14 +296,18 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         }
     }
 
+
+
     //draw filtered signal
     noStroke();
-    fill(192, 244, 247);
-    px = sx;
-    py = map(filteredFFT[0], -140, 0, sy, ey);;
-    for (let i = 0; i < filteredFFT.length; i++) {
-        if (i % 100 == 0) {
-            let x = map(i, 0, filteredFFT.length, sx, ex);
+    // fill(192, 244, 247);
+    px = map(0, 0, Math.log10(filteredFFT.length), sx, ex);
+    py = map(filteredFFT[0], -140, 0, sy, ey);
+    ellipse(px, py, 5);
+
+    for (let i = 1; i <= filteredFFT.length; i++) {
+        if (i < 5 || i % 50 == 0) {
+            let x = map(Math.log10(i), 0, Math.log10(filteredFFT.length), sx, ex);
             let h = map(filteredFFT[i], -140, 0, sy, ey);
 
             ellipse(x, h, 5);
@@ -305,12 +323,14 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw ref signal
     noStroke();
-    fill(217, 247, 192);
-    px = sx;
+    //fill(217, 247, 192);
+    px = map(0, 0, Math.log10(refFFT.length), sx, ex);
     py = map(refFFT[0], -140, 0, sy, ey);
-    for (let i = 0; i < refFFT.length; i++) {
-        if (i % 100 == 0) {
-            let x = map(i, 0, refFFT.length, sx, ex);
+    ellipse(px, py, 5);
+
+    for (let i = 1; i <= refFFT.length; i++) {
+        if (i < 5 || i % 50 == 0) {
+            let x = map(Math.log10(i), 0, Math.log10(refFFT.length), sx, ex);
             let h = map(refFFT[i], -140, 0, sy, ey);
 
             ellipse(x, h, 5);
@@ -323,4 +343,12 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
             py = h;
         }
     }
+
+    //draw the eq
+    //get bin of freq
+
+    //n = ceil(f*2048/samplingRate())
+    //3 frequencies, map (n, 0, 1024, sx, ex);
+    //map (gain, -140,140, sy, ey);
+    //
 }

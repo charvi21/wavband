@@ -55,9 +55,9 @@ function preload() {
 
     loggrid = loadImage('assets/loggrid3.png');
 
-    filtered = loadSound('assets/ddaeng.wav');
-    ref = loadSound('assets/ddaeng.wav');
-    testMicData = loadSound('assets/ddaeng.wav');
+    filtered = loadSound('assets/fyatt.wav');
+    ref = loadSound('assets/fyatt.wav');
+    testMicData = loadSound('assets/ddaengMIC.wav');
 
 }
 
@@ -73,12 +73,12 @@ function setup() {
     //CHARVI's STUFF
 
     //setup test mic data
-    fil = new p5.Filter();
-    fil.freq(2880);
-    fil.gain(-20);
-    testMicData.disconnect();
-    testMicData.connect(fil);
-    fil.disconnect();
+    // fil = new p5.Filter();
+    // fil.freq(2880);
+    // fil.gain(-20);
+    // testMicData.disconnect();
+    // testMicData.connect(fil);
+    // fil.disconnect();
 
     eq = new p5.EQ(eqLength);
     setupEQ();
@@ -94,7 +94,7 @@ function setup() {
     fftFiltered.setInput(eq);
 
     fftMic = new p5.FFT();
-    fftMic.setInput(fil);
+    fftMic.setInput(testMicData);
 
 }
 
@@ -107,7 +107,7 @@ function setupEQ() {
     for (let i = 0; i < eqLength; i++) {
         cfreq = pow(10, Math.log10(lFreq) + BW * (i + 0.5));
         eq.bands[i].freq(cfreq);
-
+        print("FREQ: ", cfreq);
         h = pow(10, Math.log10(cfreq) + (BW / 2));
         l = pow(10, Math.log10(cfreq) - (BW / 2));
         ranges.push({ high: h, low: l });
@@ -249,11 +249,22 @@ function analyzeNodes() {
         let refEnergy = fft.getEnergy(low, high);
         let micEnergy = fftMic.getEnergy(low, high);
 
-        vals[i] = refEnergy - micEnergy;
+        print("REF ENERGY: ", refEnergy);
+        print("MIC ENERGY: ", micEnergy);
+
+        //        let gain = 0;
+
+        if (micEnergy == Infinity || micEnergy == -Infinity) {
+            micEnergy = refEnergy;
+        }
+
+        let gain = refEnergy - micEnergy;
+        vals[i] = gain;
+        gains[i] = gain;
         //gains[i] = eq.bands[i].gain();
     }
     //    print("Vals: ", vals);
-    //    print("Gains: ", gains);
+    print("Gains: ", gains);
 
     adjustFilterGains(vals);
 }

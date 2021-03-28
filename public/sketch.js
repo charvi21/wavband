@@ -1,13 +1,13 @@
-// function drawGraph() {
-//     //make graph background 
-// }
-
 // function callAPI() {
 //     //call this once every 15ms
 //     //get 1024byte size buffer for L and R
 //     //make a Sound object out of it
 //     //return the object
 // }
+
+
+let socket;
+
 
 let logo;
 let headphonesym;
@@ -44,6 +44,8 @@ const lFreq = 20;
 const hFreq = 20000;
 let ranges = [];
 
+//let testMicData = new p5.SoundFile();
+
 function preload() {
 
     logo = loadImage('assets/logo.png');
@@ -57,7 +59,7 @@ function preload() {
 
     filtered = loadSound('assets/fyatt.wav');
     ref = loadSound('assets/fyatt.wav');
-    testMicData = loadSound('assets/ddaengMIC.wav');
+    testMicData = loadSound('assets/fyatt.wav');
 
 }
 
@@ -72,18 +74,53 @@ function setup() {
     drawBackground();
     //CHARVI's STUFF
 
-    //setup test mic data
-    // fil = new p5.Filter();
-    // fil.freq(2880);
-    // fil.gain(-20);
-    // testMicData.disconnect();
-    // testMicData.connect(fil);
-    // fil.disconnect();
+    //    setup test mic data
+    fil = new p5.Filter();
+    fil.freq(2880);
+    fil.gain(-20);
+    testMicData.disconnect();
+    testMicData.connect(fil);
+    fil.disconnect();
+
+    // Start the socket connection
+    socket = io('http://localhost:3000')
+
+    // Callback function
+    socket.on('httpServer', data => {
+
+        var buf = bops.from(data, 'hex');
+        //        var spBuf = Buffer.from(buf, 'hex');
+
+        // The Photon sends up unsigned data for both 8 and 16 bit
+        // The wav file format is unsigned for 8 bit and signed two-complement for 16-bit. Go figure.
+        for (var ii = 0; ii < buf.length; ii += 2) {
+            var unsigned = bops.readUInt16LE(buf, ii);
+            var signed = unsigned - 32768;
+            bops.writeInt16LE(buf, signed, ii);
+        }
+
+
+
+        let flBuf = Float32Array.from(buf);
+
+        print("BUFFER LENGTH: ", flBuf);
+        //print("chris dickinson: ", [flBuf]);
+
+        //just do fft here?
+        //create a sound file object, replace testMidData buffer with incoming buffer 
+        //testMicData.setBuffer([flBuf]);
+
+        //print(testMicData);
+
+
+        //      print('GOT DATA BITCHESSS');
+    })
 
     eq = new p5.EQ(eqLength);
     setupEQ();
     filtered.disconnect();
     eq.process(filtered);
+    //eq.disconnect();
 
     fft = new p5.FFT();
     fft.setInput(ref);
@@ -215,14 +252,14 @@ function togglePlay() {
         getAudioContext().resume();
     }
 
-    if (filtered.isPlaying()) {
+    if (testMicData.isPlaying()) {
         filtered.pause();
         ref.pause();
         testMicData.pause();
     } else {
         filtered.loop();
         ref.loop();
-        testMicData.loop();
+        testMicData.play();
     }
 }
 
@@ -249,16 +286,20 @@ function analyzeNodes() {
         let refEnergy = fft.getEnergy(low, high);
         let micEnergy = fftMic.getEnergy(low, high);
 
-        print("REF ENERGY: ", refEnergy);
-        print("MIC ENERGY: ", micEnergy);
+        // print("REF ENERGY: ", refEnergy);
+        // print("MIC ENERGY: ", micEnergy);
 
         //        let gain = 0;
 
-        if (micEnergy == Infinity || micEnergy == -Infinity) {
-            micEnergy = refEnergy;
-        }
+        // if (micEnergy == Infinity || micEnergy == -Infinity) {
+        //     micEnergy = refEnergy;
+        // }
 
         let gain = refEnergy - micEnergy;
+        if (isNaN(gain) || gain == Infinity || gain == -Infinity) {
+            gain = 0;
+        }
+
         vals[i] = gain;
         gains[i] = gain;
         //gains[i] = eq.bands[i].gain();
@@ -277,9 +318,7 @@ function adjustFilterGains(vals) {
 
     for (var i = 0; i < eqLength; i++) {
 
-        if (vals[i] != Infinity || vals[i] != -Infinity || !isNaN(vals[i])) {
-            eq.bands[i].gain(vals[i]);
-        }
+        eq.bands[i].gain(vals[i]);
 
     }
 
@@ -312,6 +351,8 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         }
     }
 
+
+    print("BUFFER L: ", refFFT.length);
 
 
     //draw filtered signal

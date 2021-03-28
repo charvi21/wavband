@@ -9,30 +9,42 @@ app.set('port', '3000')
 
 const server = http.createServer(app)
 server.on('listening', () => {
-    console.log('Listening on port 8124')
+    console.log('Listening on port 3000')
 })
 
 const rs = new Readable();
 rs._read = () => {} // _read is required but you can noop it
 
-const io = require('socket.io')(server)
+const wsock = require('socket.io')(server)
+    // var tcpsock = require('net');
 
-io.sockets.on('connection', (socket) => {
-    console.log('Client connected: ' + socket.id)
-        //socket.on('mouse', (data) => socket.broadcast.emit('mouse', data))
-    socket.on('disconnect', () => console.log('Client has disconnected'))
+// var tcp_HOST = 'localhost';
+// var tcp_PORT = 8124;
 
-    socket.on('data', function(data) {
+wsock.sockets.on('connection', (socket) => {
+    // console.log('Client connected: ' + socket.id)
+    //socket.on('httpData', (data) => socket.broadcast.emit('httpServer', data))
+    // socket.on('disconnect', () => console.log('Client has disconnected'))
+
+    socket.on('httpData', function(data) {
         // We received data on this connection.
-        console.log("got data " + typeof(data));
+        //console.log("got data " + data);
+        socket.broadcast.emit('httpServer', data);
         //var buf = Buffer.from(data, 'hex');
 
         //rs.push(buf);
 
     });
-    socket.on('end', function() {
-        console.log('transmission complete, saved to ');
-    });
+    // socket.on('end', function() {
+    //     console.log('transmission complete, saved to ');
+    // });
+
+    // socket.on('tcp-manager', function(message) {
+    //     console.log('"tcp" : ' + message);
+    //     return;
+    // });
+
+    // socket.emit("httpServer", "Initial Data");
 
 
 

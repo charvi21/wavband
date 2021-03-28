@@ -25,6 +25,9 @@ Setting up a websocket between TCPServer and HTTPServer (creating audio stream f
 
 FFT processing on TCP side: https://github.com/fengzhang2011/audio-processing 
 
+buffer client side: CHRIS DICKINSON - BOPS
+
+
 # Setup
 
 I set my JS up with VSCode Editor with the p5.vscode extension. You'd need to download p5 off the website, and then download vscode. 

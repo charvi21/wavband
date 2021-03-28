@@ -9,6 +9,8 @@ var path = require('path');
 var net = require('net');
 var wav = require('wav');
 const { Readable } = require('stream');
+const io = require("socket.io-client");
+
 
 // For this simple test, just create wav files in the "out" directory in the directory
 // where audioserver.js lives.
@@ -33,6 +35,16 @@ try {
 } catch (e) {}
 
 
+//HTTP SOCKET HERE
+//CONNECT TO SOCKET.IO HERE and have httpsocket var
+
+// Start the socket connection
+const httpsocket = io('http://localhost:3000')
+
+// // Callback function
+// socket.on('httpServer', data => {
+//     print(data);
+// })
 
 // Start a TCP Server. This is what receives data from the Particle Photon
 // https://gist.github.com/creationix/707146
@@ -50,43 +62,63 @@ var server = net.createServer(function(socket) {
     const rs = new Readable();
     rs._read = () => {} // _read is required but you can noop it
 
+    var st;
+
     socket.on('data', function(data) {
         // We received data on this connection.
         // var buf = Buffer.from(data, 'hex');
-        var buf = Buffer.from(data, 'hex');
-        //        var spBuf = Buffer.from(buf, 'hex');
+        //console.log(data);
+        //httpsocket.write()
+        //httpsocket.emit('httpData', data);
+        // var buf = Buffer.from(data, 'hex');
+        // //        var spBuf = Buffer.from(buf, 'hex');
 
-        if (wavOpts.bitDepth == 16) {
-            // The Photon sends up unsigned data for both 8 and 16 bit
-            // The wav file format is unsigned for 8 bit and signed two-complement for 16-bit. Go figure.
-            for (var ii = 0; ii < buf.length; ii += 2) {
-                var unsigned = buf.readUInt16LE(ii);
-                var signed = unsigned - 32768;
-                buf.writeInt16LE(signed, ii);
-            }
-        }
+        // if (wavOpts.bitDepth == 16) {
+        //     // The Photon sends up unsigned data for both 8 and 16 bit
+        //     // The wav file format is unsigned for 8 bit and signed two-complement for 16-bit. Go figure.
+        //     for (var ii = 0; ii < buf.length; ii += 2) {
+        //         var unsigned = buf.readUInt16LE(ii);
+        //         var signed = unsigned - 32768;
+        //         buf.writeInt16LE(signed, ii);
+        //     }
+        // }
         // console.log("data: ", buf)
-        //  rs.push(spBuf);
+        st = data;
         //  rs.pipe(ao);
 
+        //console.log(buf[0]);
+
         // console.log("got data " + (data.length / 2));
-        writer.write(buf);
+        // writer.write(buf);
+
+        // socket.write('transmission received');
 
 
     });
     socket.on('end', function() {
         //   rs.pipe(ao);
         // ao.end();
+        //socket emit here to signify recorded clip
+        httpsocket.emit('httpData', st);
         console.log('transmission complete, saved to ' + outPath);
-        writer.end();
+        // writer.end();
 
     });
+
+    //socket.write("PING");
 });
 
 server.listen(8124, function() { //'listening' listener
     console.log('server bound');
     console.log(server.address());
 });
+
+// server.on('connection', function(sock) {
+//     console.log('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
+//     sock.write("PING");
+//     console.log('Server listening on ' + server.address().address + ':' +
+//         server.address().port);
+// })
 
 function formatName(num) {
     var s = num.toString();

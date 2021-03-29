@@ -39,6 +39,24 @@ let band3Pic;
 let band8Pic;
 let connectedCheck = false;
 
+//slider stuff
+let ypos1 = 220;
+let ypos2 = 220;
+let box;
+let ogmousey;
+let sliderlength = 180;
+let linestarty = 220;
+let linestartx = 1240;
+let drywetlevel = 180;
+const drywettext1 = 'dry/wet';
+const drywettext2 = 'mix';
+const drywettext3 = '100%';
+const drywettext4 = '0%';
+const responsetimetext1 = "response";
+const responsetimetext2 = "time";
+const responsetimetext3 = "10 sec";
+const responsetimetext4 = "1 sec";
+
 let lw = 1065;
 let lh = 90;
 let sx = 120;
@@ -180,22 +198,23 @@ function setupEQ() {
 function drawBackground() {
 
     image(logo, 30, 5);
-    image(headphonesym, 1050, 15);
-    image(batt, 1125, 15);
+    //image(headphonesym, 1050, 15);
+    image(headphonesym, 1145, 15);
+    //image(batt, 1125, 15);
 
 
     textFont(font);
 
-    textSize(20);
-    fill(247, 195, 192);
-    text(hometext, 400, 55);
-    stroke(247, 195, 192);
-    strokeWeight(2); // line colour
-    line(400, 70, 475, 70);
+    //textSize(20);
+    //fill(247, 195, 192);
+    //text(hometext, 400, 55);
+    //stroke(247, 195, 192);
+    //strokeWeight(2); // line colour
+    //line(400, 70, 475, 70);
     strokeWeight(0); // reset so it doesnt show up on text
-    fill(105, 105, 109);
-    text(settingstext, 575, 55);
-    text(helptext, 775, 55);
+    //fill(105, 105, 109);
+    //text(settingstext, 575, 55);
+    //text(helptext, 775, 55);
 
     fill(217, 247, 192); //green
     ellipse(470, 155, 20, 20);
@@ -232,10 +251,6 @@ function drawBackground() {
 
     //button toggle
 
-
-    // image(togglebutt, 1073, 35);
-
-
     textSize(20);
     fill(105, 105, 109);
     text(correctiontext, 910, 163);
@@ -244,13 +259,11 @@ function drawBackground() {
     fill(105, 105, 109);
     text(bandtext, 100, 505);
 
+
+
 }
 
 function draw() {
-
-    //toggleCorr();
-    //togglebuttON.clicked();
-    //togglebuttOFF.clicked();
 
     if (corrisON == true) {
         togglebuttON.resize(40, 20);
@@ -277,10 +290,10 @@ function draw() {
     }
 
     if (connectedCheck == true) {
-        image(statusgreen, 1073, 35);
+        image(statusgreen, 1167.5, 35);
     }
     if (connectedCheck == false) {
-        image(statusred, 1073, 35);
+        image(statusred, 1167.5, 35);
     }
 
 
@@ -297,6 +310,58 @@ function draw() {
     //tint(250, 240);
     image(loggrid, 100, 175);
 
+
+
+    noStroke();
+    fill('white');
+    rect(linestartx - 15, linestarty, 30, sliderlength + 25);
+    fill(155, 137, 138);
+    let line = rect(linestartx, linestarty, 2, sliderlength);
+    fill(197, 164, 163);
+    box = rect(linestartx - 12, ypos1, 25, 10);
+    ogmousey = mouseY;
+    fill('white');
+    //const context = canvas.getContext('2d');
+    //context.clearRect(0, 0, canvas.width, canvas.height);
+
+    noStroke();
+    fill('white');
+    rect(linestartx - 15 + 50, linestarty, 50, sliderlength + 25);
+    fill(155, 137, 138);
+    line = rect(linestartx + 50, linestarty, 2, sliderlength);
+    fill(197, 164, 163);
+    let box2 = rect(linestartx - 12 + 50, ypos2, 25, 10);
+    ogmousey = mouseY;
+    fill('white');
+    //const context = canvas.getContext('2d');
+    //context.clearRect(0, 0, canvas.width, canvas.height);
+
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext1, 1220, 185);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext2, 1230, 195);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext3, 1230, 215);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext4, 1235, 235 + sliderlength);
+
+    textSize(10);
+    fill(105, 105, 109);
+    text(responsetimetext1, 1270, 185);
+    textSize(10);
+    fill(105, 105, 109);
+    text(responsetimetext2, 1280, 195);
+    textSize(10);
+    text(responsetimetext3, 1270, 215);
+    textSize(10);
+    fill(105, 105, 109);
+    text(responsetimetext4, 1280, 235 + sliderlength);
+
+    fill('white');
 }
 
 
@@ -304,7 +369,7 @@ function draw() {
 function togglePlay() {
 
 
-    if (mouseY >= 165 && mouseY <= 465) {
+    if (mouseY >= 165 && mouseY <= 465 && mouseX >= 100 && mouseX <= 1200) {
         if (getAudioContext().state !== 'running') {
             getAudioContext().resume();
         }
@@ -489,4 +554,18 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     //3 frequencies, map (n, 0, 1024, sx, ex);
     //map (gain, -140,140, sy, ey);
     //
+}
+
+function mouseDragged() {
+
+
+    if (mouseY >= (sliderlength + linestarty)) { mouseY = (linestarty + sliderlength); } else if (mouseY <= linestarty) { mouseY = linestarty; } else {
+        if (mouseX >= (linestartx + 50)) {
+            ypos2 = mouseY;
+            ypos1 = ypos1;
+        } else { ypos1 = mouseY; }
+
+    }
+
+
 }

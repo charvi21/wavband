@@ -44,7 +44,10 @@ const lFreq = 20;
 const hFreq = 20000;
 let ranges = [];
 
-//let testMicData = new p5.SoundFile();
+let micBuffer = [];
+let settingBuffer = false;
+
+let testMicData = new p5.SoundFile();
 
 function preload() {
 
@@ -59,7 +62,7 @@ function preload() {
 
     filtered = loadSound('assets/fyatt.wav');
     ref = loadSound('assets/fyatt.wav');
-    testMicData = loadSound('assets/fyatt.wav');
+    //testMicData = loadSound('assets/fyatt.wav');
 
 }
 
@@ -74,22 +77,51 @@ function setup() {
     drawBackground();
     //CHARVI's STUFF
 
-    //    setup test mic data
-    fil = new p5.Filter();
-    fil.freq(2880);
-    fil.gain(-20);
-    testMicData.disconnect();
-    testMicData.connect(fil);
-    fil.disconnect();
+    // //    setup test mic data
+    // fil = new p5.Filter();
+    // fil.freq(2880);
+    // fil.gain(-20);
+    // testMicData.disconnect();
+    // testMicData.connect(fil);
+    // fil.disconnect();
 
     // Start the socket connection
     socket = io('http://localhost:3000')
 
+    // Callback 
+    socket.on('serverEnd', function() {
+        print('serverEnd')
+
+        //only toggle is set is not true
+        settingBuffer = true;
+
+        if (testMicData.isPlaying()) {
+            allPause();
+        }
+
+        let setBuf = Float32Array.from(micBuffer)
+
+        if (!testMicData.isPlaying()) {
+            testMicData.setBuffer([setBuf]);
+        }
+
+        if (!testMicData.isPlaying()) {
+            allPlay();
+        }
+
+
+        print("setBUF: ", testMicData);
+        //reset micBuffer
+        micBuffer = [];
+
+        settingBuffer = false;
+    })
+
     // Callback function
     socket.on('httpServer', data => {
 
+        //print('data received');
         var buf = bops.from(data, 'hex');
-        //        var spBuf = Buffer.from(buf, 'hex');
 
         // The Photon sends up unsigned data for both 8 and 16 bit
         // The wav file format is unsigned for 8 bit and signed two-complement for 16-bit. Go figure.
@@ -99,33 +131,20 @@ function setup() {
             bops.writeInt16LE(buf, signed, ii);
         }
 
-
-
-        let flBuf = Float32Array.from(buf);
-
-        print("BUFFER LENGTH: ", flBuf);
-        //print("chris dickinson: ", [flBuf]);
-
-        //just do fft here?
-        //create a sound file object, replace testMidData buffer with incoming buffer 
-        //testMicData.setBuffer([flBuf]);
-
-        //print(testMicData);
-
-
-        //      print('GOT DATA BITCHESSS');
+        micBuffer = bops.join([micBuffer, buf]);
     })
 
     eq = new p5.EQ(eqLength);
     setupEQ();
     filtered.disconnect();
     eq.process(filtered);
-    //eq.disconnect();
+    eq.disconnect();
 
+    print('REF: ', ref)
     fft = new p5.FFT();
     fft.setInput(ref);
     ref.disconnect();
-    print(fft);
+
 
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
@@ -248,19 +267,29 @@ function draw() {
 
 function togglePlay() {
 
-    if (getAudioContext().state !== 'running') {
-        getAudioContext().resume();
-    }
+    if (!settingBuffer) {
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
 
-    if (testMicData.isPlaying()) {
-        filtered.pause();
-        ref.pause();
-        testMicData.pause();
-    } else {
-        filtered.loop();
-        ref.loop();
-        testMicData.play();
+        if (filtered.isPlaying()) {
+            allPause();
+        } else {
+            allPlay();
+        }
     }
+}
+
+function allPause() {
+    filtered.pause();
+    ref.pause();
+    testMicData.pause();
+}
+
+function allPlay() {
+    filtered.loop();
+    ref.loop();
+    testMicData.loop();
 }
 
 function analyzeNodes() {
@@ -305,7 +334,7 @@ function analyzeNodes() {
         //gains[i] = eq.bands[i].gain();
     }
     //    print("Vals: ", vals);
-    print("Gains: ", gains);
+    //print("Gains: ", gains);
 
     adjustFilterGains(vals);
 }
@@ -333,6 +362,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     let py = map(micDataFFT[0], -140, 0, sy, ey);
     ellipse(px, py, 5);
 
+    //  print('micDataFFT length: ', micDataFFT.length)
     for (let i = 1; i <= micDataFFT.length; i++) {
 
         if (i < 5 || i % 50 == 0) {
@@ -350,10 +380,6 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
         }
     }
-
-
-    print("BUFFER L: ", refFFT.length);
-
 
     //draw filtered signal
     noStroke();

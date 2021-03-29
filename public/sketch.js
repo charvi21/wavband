@@ -13,6 +13,7 @@ let logo;
 let headphonesym;
 let batt;
 let statusgreen;
+let statusred;
 const hometext = 'home';
 const settingstext = 'settings';
 const helptext = 'help';
@@ -27,6 +28,16 @@ let correctionisOn = true;
 const correctiontext = 'correction mode';
 const adjustmentstext = 'reference signal';
 let loggrid;
+let band3 = true;
+let band8;
+let bandtext = 'bands';
+let corrON;
+let corrOFF;
+let corrisON = true;
+let eqtext = 'eq';
+let band3Pic;
+let band8Pic;
+let connectedCheck = false;
 
 let lw = 1065;
 let lh = 90;
@@ -52,6 +63,7 @@ function preload() {
     headphonesym = loadImage('assets/headphonesym.png');
     batt = loadImage('assets/batt.png');
     statusgreen = loadImage('assets/statusgreen.png');
+    statusred = loadImage('assets/statusred.png');
 
     font = loadFont('assets/abeatbyKaiRegular.otf');
 
@@ -61,6 +73,16 @@ function preload() {
     ref = loadSound('assets/fyatt.wav');
     testMicData = loadSound('assets/fyatt.wav');
 
+
+
+    togglebuttON = loadImage('assets/corrON.png');
+
+    togglebuttOFF = loadImage('assets/corrOFF.png');
+
+    band3Pic = loadImage('assets/3band.png');
+    band8Pic = loadImage('assets/8band.png');
+
+
 }
 
 function setup() {
@@ -68,6 +90,7 @@ function setup() {
     let cnv = createCanvas(windowWidth, windowHeight);
     cnv.background('white');
     cnv.mouseClicked(togglePlay);
+
     // cnv.position(80, 150);
     // cnv.parent('canvas-area');
 
@@ -99,7 +122,7 @@ function setup() {
             bops.writeInt16LE(buf, signed, ii);
         }
 
-
+        connectedCheck = true;
 
         let flBuf = Float32Array.from(buf);
 
@@ -135,6 +158,7 @@ function setup() {
 
 }
 
+
 function setupEQ() {
     let BW = Math.log10(hFreq / lFreq) / eqLength;
     let cfreq = 0;
@@ -154,10 +178,11 @@ function setupEQ() {
 }
 
 function drawBackground() {
+
     image(logo, 30, 5);
     image(headphonesym, 1050, 15);
     image(batt, 1125, 15);
-    image(statusgreen, 1073, 35);
+
 
     textFont(font);
 
@@ -197,25 +222,71 @@ function drawBackground() {
     fill(105, 105, 109);
     text(adjustmentstext, 490, 163);
 
-    //button toggle
-
-    fill(247, 195, 192);
-    rect(720, 145, 40, 20, 50);
-
-    fill(231, 231, 231);
+    //yellow
+    fill(255, 230, 0);
     ellipse(730, 155, 20, 20);
 
+    textSize(20);
+    fill(105, 105, 109);
+    text(eqtext, 750, 163);
+
+    //button toggle
+
+
+    // image(togglebutt, 1073, 35);
 
 
     textSize(20);
     fill(105, 105, 109);
-    text(correctiontext, 770, 163);
+    text(correctiontext, 910, 163);
 
-
+    textSize(20);
+    fill(105, 105, 109);
+    text(bandtext, 100, 505);
 
 }
 
 function draw() {
+
+    //toggleCorr();
+    //togglebuttON.clicked();
+    //togglebuttOFF.clicked();
+
+    if (corrisON == true) {
+        togglebuttON.resize(40, 20);
+        image(togglebuttON, 855, 145);
+
+    }
+
+    if (corrisON == false) {
+        togglebuttOFF.resize(40, 20);
+        image(togglebuttOFF, 855, 145);
+
+    }
+
+    if (band3 == true) {
+        band3Pic.resize(100, 40);
+        image(band3Pic, 180, 480);
+
+    }
+
+    if (band3 == false) {
+        band8Pic.resize(100, 40);
+        image(band8Pic, 180, 480);
+
+    }
+
+    if (connectedCheck == true) {
+        image(statusgreen, 1073, 35);
+    }
+    if (connectedCheck == false) {
+        image(statusred, 1073, 35);
+    }
+
+
+    if (filtered.isPlaying()) {
+        analyzeNodes();
+    }
 
     //background(220);
     //fill(155, 137, 138);
@@ -226,41 +297,51 @@ function draw() {
     //tint(250, 240);
     image(loggrid, 100, 175);
 
-
-    //rect(100, 575, 1105.76, 285);
-    // fill(247, 195, 192);
-
-    //tint(250, 240);
-    //image(loggrid, 100, 575);
-
-    if (filtered.isPlaying()) {
-        analyzeNodes();
-    }
-
 }
 
-// function mouseClicked() {
-//     if (dist(480, 148, mouseX, mouseY) < radius) {
-//         if (isOn == true) isOn = false;
-//         else isOn = true;
-//     }
-// }
+
 
 function togglePlay() {
 
-    if (getAudioContext().state !== 'running') {
-        getAudioContext().resume();
+
+    if (mouseY >= 165 && mouseY <= 465) {
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+
+        if (testMicData.isPlaying()) {
+            filtered.pause();
+            ref.pause();
+            testMicData.pause();
+        } else {
+            filtered.loop();
+            ref.loop();
+            testMicData.play();
+        }
     }
 
-    if (testMicData.isPlaying()) {
-        filtered.pause();
-        ref.pause();
-        testMicData.pause();
-    } else {
-        filtered.loop();
-        ref.loop();
-        testMicData.play();
+    if (mouseY <= 160 && mouseY >= 140 && mouseX >= 850 && mouseX <= 900) {
+        if (corrisON == true) {
+
+            corrisON = false;
+            // print("bool is now false ", corrisON);
+        } else {
+            corrisON = true;
+            //print("bool is now true ", corrisON);
+        }
     }
+
+    if (mouseY >= 465 && mouseY <= 550) {
+        if (band3 == true) {
+
+            band3 = false;
+            // print("bool is now false ", corrisON);
+        } else {
+            band3 = true;
+            //print("bool is now true ", corrisON);
+        }
+    }
+
 }
 
 function analyzeNodes() {

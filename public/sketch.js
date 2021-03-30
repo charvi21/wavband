@@ -38,6 +38,8 @@ let eqtext = 'eq';
 let band3Pic;
 let band8Pic;
 let connectedCheck = false;
+const legend1 = "0 db";
+const legend2 = '0 norm.';
 
 //slider stuff
 let ypos1 = 220;
@@ -324,15 +326,15 @@ function draw() {
     //const context = canvas.getContext('2d');
     //context.clearRect(0, 0, canvas.width, canvas.height);
 
-    noStroke();
-    fill('white');
-    rect(linestartx - 15 + 50, linestarty, 50, sliderlength + 25);
-    fill(155, 137, 138);
-    line = rect(linestartx + 50, linestarty, 2, sliderlength);
-    fill(197, 164, 163);
-    let box2 = rect(linestartx - 12 + 50, ypos2, 25, 10);
-    ogmousey = mouseY;
-    fill('white');
+    //noStroke();
+    //fill('white');
+    //rect(linestartx - 15 + 50, linestarty, 50, sliderlength + 25);
+    //fill(155, 137, 138);
+    //line = rect(linestartx + 50, linestarty, 2, sliderlength);
+    //fill(197, 164, 163);
+    //let box2 = rect(linestartx - 12 + 50, ypos2, 25, 10);
+    // ogmousey = mouseY;
+    //fill('white');
     //const context = canvas.getContext('2d');
     //context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -349,19 +351,32 @@ function draw() {
     fill(105, 105, 109);
     text(drywettext4, 1235, 235 + sliderlength);
 
-    textSize(10);
-    fill(105, 105, 109);
-    text(responsetimetext1, 1270, 185);
-    textSize(10);
-    fill(105, 105, 109);
-    text(responsetimetext2, 1280, 195);
-    textSize(10);
-    text(responsetimetext3, 1270, 215);
-    textSize(10);
-    fill(105, 105, 109);
-    text(responsetimetext4, 1280, 235 + sliderlength);
+    //textSize(10);
+    //fill(105, 105, 109);
+    //text(responsetimetext1, 1270, 185);
+    //textSize(10);
+    //fill(105, 105, 109);
+    //text(responsetimetext2, 1280, 195);
+    //textSize(10);
+    //text(responsetimetext3, 1270, 215);
+    // textSize(10);
+    //fill(105, 105, 109);
+    // text(responsetimetext4, 1280, 235 + sliderlength);
+
+    textSize(8.5);
+    fill(255, 230, 0);
+    text(legend1, 110, 295);
+
+    textSize(8.5);
+    fill(232, 198, 194);
+    text(legend2, 110, 420);
+
 
     fill('white');
+
+
+
+
 }
 
 

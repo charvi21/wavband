@@ -1,11 +1,3 @@
-// function callAPI() {
-//     //call this once every 15ms
-//     //get 1024byte size buffer for L and R
-//     //make a Sound object out of it
-//     //return the object
-// }
-
-
 let socket;
 
 
@@ -63,8 +55,8 @@ let sx = 120;
 
 let ex = sx + lw;
 
-let ey = 220;
-let sy = ey + lh;
+let ey = 190;
+let sy = 425;
 
 
 let eqLength = 3;
@@ -72,8 +64,14 @@ let ref;
 const lFreq = 20;
 const hFreq = 20000;
 let ranges = [];
+let cFreqs = [];
 
-//let testMicData = new p5.SoundFile();
+var gains = [0, 0, 0];
+
+let micBuffer = [];
+let settingBuffer = false;
+
+let testMicData = new Array();
 
 function preload() {
 
@@ -89,7 +87,7 @@ function preload() {
 
     filtered = loadSound('assets/fyatt.wav');
     ref = loadSound('assets/fyatt.wav');
-    testMicData = loadSound('assets/fyatt.wav');
+    // testMicData = loadSound('assets/fyatt.wav');
 
 
 
@@ -115,13 +113,14 @@ function setup() {
     drawBackground();
     //CHARVI's STUFF
 
-    //    setup test mic data
-    fil = new p5.Filter();
-    fil.freq(2880);
-    fil.gain(-20);
-    testMicData.disconnect();
-    testMicData.connect(fil);
-    fil.disconnect();
+    // //    setup test mic data
+    // fil = new p5.Filter();
+    // fil.freq(2880);
+    // fil.gain(0);
+    // testMicData.disconnect();
+    // testMicData.connect(fil);
+    // fil.disconnect();
+
 
     // Start the socket connection
     socket = io('http://localhost:3000')
@@ -129,51 +128,97 @@ function setup() {
     // Callback function
     socket.on('httpServer', data => {
 
+        //print('data received');
         var buf = bops.from(data, 'hex');
-        //        var spBuf = Buffer.from(buf, 'hex');
+        // print("BUF.length: ", buf.length);
 
-        // The Photon sends up unsigned data for both 8 and 16 bit
-        // The wav file format is unsigned for 8 bit and signed two-complement for 16-bit. Go figure.
-        for (var ii = 0; ii < buf.length; ii += 2) {
-            var unsigned = bops.readUInt16LE(buf, ii);
-            var signed = unsigned - 32768;
-            bops.writeInt16LE(buf, signed, ii);
+
+        var bufAr = Array.from(buf);
+        //   var ip = new Array(1024).fill(0);
+
+        var ip = resizeArray(bufAr, 1024);
+
+        for (var i = 0; i < buf.length; i++) {
+            ip[i] = bufAr[i];
         }
 
-        connectedCheck = true;
+        var fft = new p5.FastFourierTransform(1024, 20000, 1024);
+        fft.doFrequency = true;
 
-        let flBuf = Float32Array.from(buf);
+        fft.forward(ip);
 
-        print("BUFFER LENGTH: ", flBuf);
-        //print("chris dickinson: ", [flBuf]);
+        //could use MAGNITUDE
+        var op = fft.real;
 
-        //just do fft here?
-        //create a sound file object, replace testMidData buffer with incoming buffer 
-        //testMicData.setBuffer([flBuf]);
+        op[0] = 0;
 
-        //print(testMicData);
+        //console.log("OP: ", op);
+
+        let min = Math.min(...op);
+        let max = Math.max(...op);
+
+        //  print("MIN: ", min);
+        //  print("MAX: ", max);
+
+        //normalize to -140 to 0 dB and set gain directly
+        for (var i = 0; i < op.length; i++) {
+            op[i] = norm(op[i], min, max) * 255;
+        }
+
+        testMicData = op;
+
+        //  console.log("testMicData: ", testMicData);
 
 
-        //      print('GOT DATA BITCHESSS');
+        //micBuffer = bops.join([micBuffer, buf]);
     })
+
+
+    // fftMic = new p5.FFT();
+    // fftMic.setInput(testMicData);
+    // testMicData.disconnect();
 
     eq = new p5.EQ(eqLength);
     setupEQ();
     filtered.disconnect();
     eq.process(filtered);
-    //eq.disconnect();
 
     fft = new p5.FFT();
     fft.setInput(ref);
     ref.disconnect();
-    print(fft);
 
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
 
-    fftMic = new p5.FFT();
-    fftMic.setInput(testMicData);
+}
 
+function getAverage(op, band) {
+
+    let sum = 0;
+
+    if (band == 0) {
+        ind1 = 1;
+        ind2 = 11;
+    }
+
+    if (band == 1) {
+        ind1 = 11;
+        ind2 = 103;
+    }
+
+    if (band == 2) {
+        ind1 = 103;
+        ind2 = 1024;
+    }
+
+    //get indexes from l & h
+    for (let i = ind1; i < ind2; i++) {
+        sum = sum + op[i];
+    }
+
+    let av = sum / (ind2 - ind1);
+
+    return av
 }
 
 
@@ -186,7 +231,7 @@ function setupEQ() {
     for (let i = 0; i < eqLength; i++) {
         cfreq = pow(10, Math.log10(lFreq) + BW * (i + 0.5));
         eq.bands[i].freq(cfreq);
-        print("FREQ: ", cfreq);
+        cFreqs[i] = cfreq;
         h = pow(10, Math.log10(cfreq) + (BW / 2));
         l = pow(10, Math.log10(cfreq) - (BW / 2));
         ranges.push({ high: h, low: l });
@@ -296,11 +341,6 @@ function draw() {
         image(statusred, 1167.5, 35);
     }
 
-
-    if (filtered.isPlaying()) {
-        analyzeNodes();
-    }
-
     //background(220);
     //fill(155, 137, 138);
     //placeholders for plots
@@ -310,6 +350,9 @@ function draw() {
     //tint(250, 240);
     image(loggrid, 100, 175);
 
+    if (filtered.isPlaying()) {
+        analyzeNodes();
+    }
 
 
     noStroke();
@@ -364,8 +407,6 @@ function draw() {
     fill('white');
 }
 
-
-
 function togglePlay() {
 
 
@@ -374,14 +415,12 @@ function togglePlay() {
             getAudioContext().resume();
         }
 
-        if (testMicData.isPlaying()) {
+        if (filtered.isPlaying()) {
             filtered.pause();
             ref.pause();
-            testMicData.pause();
         } else {
             filtered.loop();
             ref.loop();
-            testMicData.play();
         }
     }
 
@@ -405,22 +444,22 @@ function togglePlay() {
             band3 = true;
             //print("bool is now true ", corrisON);
         }
-    }
 
+    }
 }
+
 
 function analyzeNodes() {
     //delay(10ms here)
 
-    let refFFT = fft.analyze("dB");
+    let refFFT = fft.analyze();
 
-    let filteredFFT = fftFiltered.analyze("dB");
-    let micDataFFT = fftMic.analyze("dB");
+    let filteredFFT = fftFiltered.analyze();
+    //let micDataFFT = fftMic.analyze("dB");
 
-    drawSignals(refFFT, filteredFFT, micDataFFT);
+    drawSignals(refFFT, filteredFFT);
 
     var vals = [0, 0, 0];
-    var gains = [0, 0, 0];
     var low = 0;
     var high = 0;
 
@@ -430,28 +469,19 @@ function analyzeNodes() {
         high = ranges[i].high;
 
         let refEnergy = fft.getEnergy(low, high);
-        let micEnergy = fftMic.getEnergy(low, high);
-
-        // print("REF ENERGY: ", refEnergy);
-        // print("MIC ENERGY: ", micEnergy);
-
-        //        let gain = 0;
-
-        // if (micEnergy == Infinity || micEnergy == -Infinity) {
-        //     micEnergy = refEnergy;
-        // }
+        let micEnergy = getAverage(testMicData, i);
 
         let gain = refEnergy - micEnergy;
+
         if (isNaN(gain) || gain == Infinity || gain == -Infinity) {
             gain = 0;
         }
 
         vals[i] = gain;
-        gains[i] = gain;
-        //gains[i] = eq.bands[i].gain();
     }
-    //    print("Vals: ", vals);
-    print("Gains: ", gains);
+
+    //print("Vals: ", vals);
+    //print("Gains: ", gains);
 
     adjustFilterGains(vals);
 }
@@ -464,26 +494,38 @@ function adjustFilterGains(vals) {
 
     for (var i = 0; i < eqLength; i++) {
 
-        eq.bands[i].gain(vals[i]);
+        let err = vals[i];
+        let curGain = gains[i];
+
+        if (err < -100) {
+            curGain = curGain - 0.15;
+            eq.bands[i].gain(curGain);
+        } else if (err > 100) {
+            curGain = curGain + 0.15;
+            eq.bands[i].gain(curGain);
+        }
+
+        gains[i] = curGain;
 
     }
 
 }
 
-function drawSignals(refFFT, filteredFFT, micDataFFT) {
+function drawSignals(refFFT, filteredFFT) {
 
     //draw micData signal
     noStroke();
     fill(222, 192, 247);
-    let px = map(0, 0, Math.log10(micDataFFT.length), sx, ex);
-    let py = map(micDataFFT[0], -140, 0, sy, ey);
+    let px = map(Math.log10(1), 0, Math.log10(testMicData.length), sx, ex);
+    let py = map(testMicData[1], 0, 255, sy, ey);
     ellipse(px, py, 5);
 
-    for (let i = 1; i <= micDataFFT.length; i++) {
+    //print('refFFT length: ', refFFT);
+    for (let i = 1; i <= testMicData.length; i++) {
 
         if (i < 5 || i % 50 == 0) {
-            let x = map(Math.log10(i), 0, Math.log10(micDataFFT.length), sx, ex);
-            let h = map(micDataFFT[i], -140, 0, sy, ey);
+            let x = map(Math.log10(i), 0, Math.log10(testMicData.length), sx, ex);
+            let h = map(testMicData[i], 0, 255, sy, ey);
 
             ellipse(x, h, 5);
 
@@ -497,21 +539,17 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         }
     }
 
-
-    print("BUFFER L: ", refFFT.length);
-
-
     //draw filtered signal
     noStroke();
     fill(192, 244, 247);
-    px = map(0, 0, Math.log10(filteredFFT.length), sx, ex);
-    py = map(filteredFFT[0], -140, 0, sy, ey);
+    px = map(Math.log10(1), 0, Math.log10(filteredFFT.length), sx, ex);
+    py = map(filteredFFT[1], 0, 255, sy, ey);
     ellipse(px, py, 5);
 
     for (let i = 1; i <= filteredFFT.length; i++) {
         if (i < 5 || i % 50 == 0) {
             let x = map(Math.log10(i), 0, Math.log10(filteredFFT.length), sx, ex);
-            let h = map(filteredFFT[i], -140, 0, sy, ey);
+            let h = map(filteredFFT[i], 0, 255, sy, ey);
 
             ellipse(x, h, 5);
 
@@ -527,14 +565,14 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     //draw ref signal
     noStroke();
     fill(217, 247, 192);
-    px = map(0, 0, Math.log10(refFFT.length), sx, ex);
-    py = map(refFFT[0], -140, 0, sy, ey);
+    px = map(Math.log10(1), 0, Math.log10(refFFT.length), sx, ex);
+    py = map(refFFT[1], 0, 255, sy, ey);
     ellipse(px, py, 5);
 
     for (let i = 1; i <= refFFT.length; i++) {
         if (i < 5 || i % 50 == 0) {
             let x = map(Math.log10(i), 0, Math.log10(refFFT.length), sx, ex);
-            let h = map(refFFT[i], -140, 0, sy, ey);
+            let h = map(refFFT[i], 0, 255, sy, ey);
 
             ellipse(x, h, 5);
 
@@ -547,6 +585,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         }
     }
 
+
     //draw the eq
     //get bin of freq
 
@@ -554,6 +593,25 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     //3 frequencies, map (n, 0, 1024, sx, ex);
     //map (gain, -140,140, sy, ey);
     //
+
+    //draw filter eqs
+    noStroke();
+    fill(255, 230, 0);
+
+    let bins = [4, 31, 256];
+
+    for (let i = 0; i < eqLength; i++) {
+
+        let x = map(Math.log10(bins[i]), 0, Math.log10(1024), sx, ex);
+        let h = map(gains[i], -140, 140, sy, ey);
+
+        fill(255, 230, 0);
+        ellipse(x, h, 7);
+
+        stroke(255, 230, 0);
+        strokeWeight(3);
+        line(x, sy, x, h);
+    }
 }
 
 function mouseDragged() {

@@ -73,7 +73,7 @@ var gains = [0, 0, 0];
 let micBuffer = [];
 let settingBuffer = false;
 
-let testMicData = new Array();
+//let testMicData = new Array();
 
 function preload() {
 
@@ -87,8 +87,9 @@ function preload() {
 
     loggrid = loadImage('assets/loggrid3.png');
 
-    filtered = loadSound('assets/fyatt.wav');
-    ref = loadSound('assets/fyatt.wav');
+    filtered = loadSound('assets/imma.wav');
+    ref = loadSound('assets/imma.wav');
+    testMicData = loadSound('assets/char.wav');
 
     togglebuttON = loadImage('assets/corrON.png');
     togglebuttOFF = loadImage('assets/corrOFF.png');
@@ -103,42 +104,44 @@ function setup() {
 
     drawBackground();
 
-    // Start the socket connection
-    socket = io('http://localhost:3000')
+    // // Start the socket connection
+    // socket = io('http://localhost:3000')
 
-    // Callback function
-    socket.on('httpServer', data => {
+    // // Callback function
+    // socket.on('httpServer', data => {
 
-        var buf = bops.from(data, 'hex');
+    //     if (filtered.isPlaying()) {
+    //         var buf = bops.from(data, 'hex');
 
-        var bufAr = Array.from(buf);
-        var ip = resizeArray(bufAr, 1024);
+    //         var bufAr = Array.from(buf);
+    //         var ip = resizeArray(bufAr, 1024);
 
-        for (var i = 0; i < buf.length; i++) {
-            ip[i] = bufAr[i];
-        }
+    //         for (var i = 0; i < buf.length; i++) {
+    //             ip[i] = bufAr[i];
+    //         }
 
-        var fft = new p5.FastFourierTransform(1024, 20000, 1024);
-        fft.doFrequency = true;
+    //         var fftMic = new p5.FastFourierTransform(1024, 20000, 1024);
+    //         fftMic.doFrequency = true;
 
-        fft.forward(ip);
+    //         fftMic.forward(ip);
 
-        //could use MAGNITUDE
-        var op = fft.real;
+    //         //could use MAGNITUDE
+    //         var op = fftMic.real;
 
-        //kill the DC gain
-        op[0] = 0;
+    //         //kill the DC gain
+    //         op[0] = 0;
 
-        let min = Math.min(...op);
-        let max = Math.max(...op);
+    //         let min = Math.min(...op);
+    //         let max = Math.max(...op);
 
-        //normalize to -140 to 0 dB and set gain directly
-        for (var i = 0; i < op.length; i++) {
-            op[i] = norm(op[i], min, max) * 255;
-        }
+    //         //normalize to -140 to 0 dB and set gain directly
+    //         for (var i = 0; i < op.length; i++) {
+    //             op[i] = norm(op[i], min, max) * 255;
+    //         }
 
-        testMicData = op;
-    })
+    //         testMicData = op;
+    //     }
+    // })
 
     eq = new p5.EQ(eqLength);
     setupEQ();
@@ -151,6 +154,10 @@ function setup() {
 
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
+
+    fftMic = new p5.FFT();
+    fftMic.setInput(testMicData);
+    testMicData.disconnect();
 
 }
 
@@ -245,9 +252,7 @@ function drawBackground() {
     fill(105, 105, 109);
     text(correctiontext, 910, 163);
 
-    //textSize(20);
-    //fill(105, 105, 109);
-    //text(bandtext, 100, 505);
+
 
 }
 
@@ -326,9 +331,11 @@ function togglePlay() {
         if (filtered.isPlaying()) {
             filtered.pause();
             ref.pause();
+            testMicData.pause();
         } else {
             filtered.loop();
             ref.loop();
+            testMicData.loop();
         }
     }
 
@@ -356,10 +363,10 @@ function togglePlay() {
 function analyzeNodes() {
 
     let refFFT = fft.analyze();
-
     let filteredFFT = fftFiltered.analyze();
+    let micDataFFT = fftMic.analyze();
 
-    drawSignals(refFFT, filteredFFT);
+    drawSignals(refFFT, filteredFFT, micDataFFT);
 
     var vals = [0, 0, 0];
     var low = 0;
@@ -371,15 +378,17 @@ function analyzeNodes() {
         high = ranges[i].high;
 
         let refEnergy = fft.getEnergy(low, high);
-        let micEnergy = getAverage(testMicData, i);
+        let micEnergy = fftMic.getEnergy(low, high);
+        let filEnergy = fftFiltered.getEnergy(low, high);
+        //let micEnergy = getAverage(testMicData, i);
 
-        let gain = refEnergy - micEnergy;
+        let err = refEnergy - micEnergy - filEnergy;
 
-        if (isNaN(gain) || gain == Infinity || gain == -Infinity) {
-            gain = 0;
+        if (isNaN(err) || err == Infinity || err == -Infinity) {
+            err = 0;
         }
 
-        vals[i] = gain;
+        vals[i] = err;
     }
 
     adjustFilterGains(vals);
@@ -392,11 +401,15 @@ function adjustFilterGains(vals) {
         let err = vals[i];
         let curGain = gains[i];
 
-        if (err < -100) {
+        print("band: ", i);
+        print("err: ", err);
+        print("gain: ", curGain);
+
+        if (err < -120) {
             curGain = curGain - 0.15;
             eq.bands[i].gain(curGain);
 
-        } else if (err > 100) {
+        } else if (err > 120) {
             curGain = curGain + 0.15;
             eq.bands[i].gain(curGain);
         }
@@ -407,20 +420,20 @@ function adjustFilterGains(vals) {
 
 }
 
-function drawSignals(refFFT, filteredFFT) {
+function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw micData signal
     noStroke();
     fill(222, 192, 247);
-    let px = map(Math.log10(1), 0, Math.log10(testMicData.length), sx, ex);
-    let py = map(testMicData[1], 0, 255, sy, ey);
+    let px = map(Math.log10(1), 0, Math.log10(micDataFFT.length), sx, ex);
+    let py = map(micDataFFT[1], 0, 255, sy, ey);
     ellipse(px, py, 5);
 
-    for (let i = 1; i <= testMicData.length; i++) {
+    for (let i = 1; i <= micDataFFT.length; i++) {
 
         if (i < 5 || i % 50 == 0) {
-            let x = map(Math.log10(i), 0, Math.log10(testMicData.length), sx, ex);
-            let h = map(testMicData[i], 0, 255, sy, ey);
+            let x = map(Math.log10(i), 0, Math.log10(micDataFFT.length), sx, ex);
+            let h = map(micDataFFT[i], 0, 255, sy, ey);
 
             ellipse(x, h, 5);
 
@@ -490,7 +503,7 @@ function drawSignals(refFFT, filteredFFT) {
     for (let i = 0; i < eqLength; i++) {
 
         let x = map(Math.log10(bins[i]), 0, Math.log10(1024), sx, ex);
-        let h = map(gains[i], -140, 140, sy, ey);
+        let h = map(gains[i], -100, 100, sy, ey);
 
         fill(255, 230, 0);
         ellipse(x, h, 7);

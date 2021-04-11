@@ -94,7 +94,7 @@ function preload() {
 
     filtered = loadSound('assets/imma.wav');
     ref = loadSound('assets/imma.wav');
-    testMicData = loadSound('assets/char.wav');
+    testMicData = loadSound('assets/walkingmic.wav');
 
     togglebuttON = loadImage('assets/corrON.png');
     togglebuttOFF = loadImage('assets/corrOFF.png');
@@ -106,6 +106,7 @@ function setup() {
     let cnv = createCanvas(windowWidth, windowHeight);
     cnv.background('white');
     cnv.mouseClicked(togglePlay);
+    noStroke();
 
     drawBackground();
 
@@ -254,6 +255,7 @@ function drawBackground() {
     //yellow
     fill(255, 230, 0);
     ellipse(730, 155, 20, 20);
+    noStroke();
 
     textSize(20);
     fill(105, 105, 109);
@@ -263,6 +265,20 @@ function drawBackground() {
     textSize(20);
     fill(105, 105, 109);
     text(correctiontext, 910, 163);
+
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext1, 1220, 185);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext2, 1230, 195);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext3, 1230, 215);
+
+
+
+
 }
 
 function draw() {
@@ -280,8 +296,11 @@ function draw() {
         box = rect(linestartx - 12, ypos1, 25, 10);
         ogmousey = mouseY;
         fill('white');
-        noStroke();
-
+        //noStroke();
+        textSize(10);
+        fill(105, 105, 109);
+        text(drywettext4, 1235, sliderlength + 235);
+        fill('white');
 
     }
 
@@ -298,7 +317,11 @@ function draw() {
         box = rect(linestartx - 12, sliderlength + ypos1 - 10, 25, 10);
         ogmousey = mouseY;
         fill('white');
-        noStroke();
+        //noStroke();
+        textSize(10);
+        fill(105, 105, 109);
+        text(drywettext4, 1235, sliderlength + 235);
+        fill('white');
 
     }
 
@@ -324,19 +347,7 @@ function draw() {
 
 
 
-    textSize(10);
-    fill(105, 105, 109);
-    text(drywettext1, 1220, 185);
-    textSize(10);
-    fill(105, 105, 109);
-    text(drywettext2, 1230, 195);
-    textSize(10);
-    fill(105, 105, 109);
-    text(drywettext3, 1230, 215);
-    textSize(10);
-    fill(105, 105, 109);
-    text(drywettext4, 1235, 235 + sliderlength);
-
+    //legend
     textSize(8.5);
     fill(255, 230, 0);
     text(legend1, 110, 295);
@@ -345,8 +356,8 @@ function draw() {
     fill(232, 198, 194);
     text(legend2, 110, 420);
 
-
-    fill('white');
+    //fill('white');
+    //noStroke();
 
 }
 
@@ -387,6 +398,7 @@ function togglePlay() {
         }
 
     }
+    noStroke();
 }
 
 
@@ -484,6 +496,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
             px = x;
             py = h;
 
+
         }
     }
 
@@ -536,6 +549,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     //draw filter eqs
     noStroke();
     fill(255, 230, 0);
+    noStroke();
 
     //index of center frequencies: 60, 600, 6000
     let bins = [];
@@ -562,16 +576,19 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         strokeWeight(3);
         line(x, sy, x, h);
     }
+
+    noStroke();
 }
 
-function mouseDragged() {
+// function mouseDragged() {
 
-    if (mouseY >= (sliderlength + linestarty)) { mouseY = (linestarty + sliderlength); } else if (mouseY <= linestarty) { mouseY = linestarty; } else {
-        if (mouseX >= (linestartx + 50)) {
-            ypos2 = mouseY;
-            ypos1 = ypos1;
-        } else { ypos1 = mouseY; }
+//     if (mouseY >= (sliderlength + linestarty)) { mouseY = (linestarty + sliderlength); } else if (mouseY <= linestarty) { mouseY = linestarty; } else {
+//         if (mouseX >= (linestartx + 50)) {
+//             ypos2 = mouseY;
+//             ypos1 = ypos1;
+//         } else { ypos1 = mouseY; }
 
-    }
+//     }
+//     noStroke();
 
-}
+// }

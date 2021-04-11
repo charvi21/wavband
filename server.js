@@ -22,11 +22,6 @@ wsock.sockets.on('connection', (socket) => {
 
     });
 
-    socket.on('endAudio', function() {
-        console.log('transmission complete');
-        socket.broadcast.emit('serverEnd');
-    });
-
 })
 
 server.listen('3000')

@@ -61,17 +61,22 @@ let ey = 190;
 let sy = 425;
 
 
-let eqLength = 3;
+let eqLength = 8;
 let ref;
 const lFreq = 20;
 const hFreq = 20000;
 let ranges = [];
 let cFreqs = [];
 
-var gains = [0, 0, 0];
+var gains = [0, 0, 0, 0, 0, 0, 0, 0];
 
 let micBuffer = [];
 let settingBuffer = false;
+
+var steadyStateErrors = [];
+var steadyStateTimes = [];
+
+let store = true;
 
 //let testMicData = new Array();
 
@@ -144,9 +149,15 @@ function setup() {
     // })
 
     eq = new p5.EQ(eqLength);
-    setupEQ();
+    setupEQ(eq);
     filtered.disconnect();
     eq.process(filtered);
+
+    eqMic = new p5.EQ(eqLength);
+    setupEQ(eqMic);
+    testMicData.disconnect();
+    eqMic.process(testMicData);
+    eqMic.disconnect();
 
     fft = new p5.FFT();
     fft.setInput(ref);
@@ -156,8 +167,7 @@ function setup() {
     fftFiltered.setInput(eq);
 
     fftMic = new p5.FFT();
-    fftMic.setInput(testMicData);
-    testMicData.disconnect();
+    fftMic.setInput(eqMic);
 
 }
 
@@ -190,7 +200,7 @@ function getAverage(op, band) {
 }
 
 
-function setupEQ() {
+function setupEQ(obj) {
     let BW = Math.log10(hFreq / lFreq) / eqLength;
     let cfreq = 0;
     let h = 0;
@@ -198,7 +208,7 @@ function setupEQ() {
 
     for (let i = 0; i < eqLength; i++) {
         cfreq = pow(10, Math.log10(lFreq) + BW * (i + 0.5));
-        eq.bands[i].freq(cfreq);
+        obj.bands[i].freq(cfreq);
         cFreqs[i] = cfreq;
         h = pow(10, Math.log10(cfreq) + (BW / 2));
         l = pow(10, Math.log10(cfreq) - (BW / 2));
@@ -206,6 +216,8 @@ function setupEQ() {
 
     }
 
+    print("cFeqs: ", cFreqs);
+    print("ranges: ", ranges);
 }
 
 function drawBackground() {
@@ -251,9 +263,6 @@ function drawBackground() {
     textSize(20);
     fill(105, 105, 109);
     text(correctiontext, 910, 163);
-
-
-
 }
 
 function draw() {
@@ -262,11 +271,34 @@ function draw() {
         togglebuttON.resize(40, 20);
         image(togglebuttON, 855, 145);
 
+        noStroke();
+        fill('white');
+        rect(linestartx - 15, linestarty, 30, sliderlength + 25);
+        fill(155, 137, 138);
+        rect(linestartx, linestarty, 2, sliderlength);
+        fill(197, 164, 163);
+        box = rect(linestartx - 12, ypos1, 25, 10);
+        ogmousey = mouseY;
+        fill('white');
+        noStroke();
+
+
     }
 
     if (corrisON == false) {
         togglebuttOFF.resize(40, 20);
         image(togglebuttOFF, 855, 145);
+
+        noStroke();
+        fill('white');
+        rect(linestartx - 15, linestarty, 30, sliderlength + 25);
+        fill(155, 137, 138);
+        rect(linestartx, linestarty, 2, sliderlength);
+        fill(197, 164, 163);
+        box = rect(linestartx - 12, sliderlength + ypos1 - 10, 25, 10);
+        ogmousey = mouseY;
+        fill('white');
+        noStroke();
 
     }
 
@@ -280,19 +312,17 @@ function draw() {
     //tint(250, 240);
     image(loggrid, 100, 175);
 
+
+    //20.8microseconds to get data
+    //3900requests/sec (0.00025641s for one socket communication)
+    //draw is 60frames/sec (0.017s) -> 17ms to calculate FFT, update gain vals, draw signals
+    //well under 100ms
+    //timer to analyzeNodes - time to process 
     if (filtered.isPlaying()) {
         analyzeNodes();
     }
 
-    noStroke();
-    fill('white');
-    rect(linestartx - 15, linestarty, 30, sliderlength + 25);
-    fill(155, 137, 138);
-    rect(linestartx, linestarty, 2, sliderlength);
-    fill(197, 164, 163);
-    box = rect(linestartx - 12, ypos1, 25, 10);
-    ogmousey = mouseY;
-    fill('white');
+
 
     textSize(10);
     fill(105, 105, 109);
@@ -368,7 +398,7 @@ function analyzeNodes() {
 
     drawSignals(refFFT, filteredFFT, micDataFFT);
 
-    var vals = [0, 0, 0];
+    var vals = [0, 0, 0, 0, 0, 0, 0, 0];
     var low = 0;
     var high = 0;
 
@@ -379,10 +409,9 @@ function analyzeNodes() {
 
         let refEnergy = fft.getEnergy(low, high);
         let micEnergy = fftMic.getEnergy(low, high);
-        let filEnergy = fftFiltered.getEnergy(low, high);
         //let micEnergy = getAverage(testMicData, i);
 
-        let err = refEnergy - micEnergy - filEnergy;
+        let err = refEnergy - micEnergy;
 
         if (isNaN(err) || err == Infinity || err == -Infinity) {
             err = 0;
@@ -391,7 +420,20 @@ function analyzeNodes() {
         vals[i] = err;
     }
 
-    adjustFilterGains(vals);
+    //CODE FOR STEADY STATE ERROR CALCULATION
+    //only push back err vals for first 100 ms 
+    // if (filtered.currentTime() <= 5) {
+    //     steadyStateErrors.push(vals);
+    //     steadyStateTimes.push(filtered.currentTime());
+    // } else if (store) {
+    //     save(steadyStateErrors, "sse.txt");
+    //     save(steadyStateTimes, "sseTime.txt");
+    //     store = false;
+    // }
+
+    if (corrisON) {
+        adjustFilterGains(vals);
+    }
 }
 
 function adjustFilterGains(vals) {
@@ -401,17 +443,15 @@ function adjustFilterGains(vals) {
         let err = vals[i];
         let curGain = gains[i];
 
-        print("band: ", i);
-        print("err: ", err);
-        print("gain: ", curGain);
-
-        if (err < -120) {
-            curGain = curGain - 0.15;
+        if (err < -1) {
+            curGain = curGain - 0.3;
             eq.bands[i].gain(curGain);
+            eqMic.bands[i].gain(curGain);
 
-        } else if (err > 120) {
-            curGain = curGain + 0.15;
+        } else if (err > 1) {
+            curGain = curGain + 0.3;
             eq.bands[i].gain(curGain);
+            eqMic.bands[i].gain(curGain);
         }
 
         gains[i] = curGain;
@@ -498,12 +538,22 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     fill(255, 230, 0);
 
     //index of center frequencies: 60, 600, 6000
-    let bins = [4, 31, 256];
+    let bins = [];
+
+    if (eqLength == 3) {
+        bins = [4, 31, 256];
+    } else {
+        bins = [1.5, 3.7, 7.7, 20.5, 48, 111, 275, 555];
+    }
+
+    //index of cFreqs: 30, 73, 173, 410, 973, 2309, 5476, 12987
+
+    print("GAINS: ", gains);
 
     for (let i = 0; i < eqLength; i++) {
 
         let x = map(Math.log10(bins[i]), 0, Math.log10(1024), sx, ex);
-        let h = map(gains[i], -100, 100, sy, ey);
+        let h = map(gains[i], -60, 60, sy, ey);
 
         fill(255, 230, 0);
         ellipse(x, h, 7);

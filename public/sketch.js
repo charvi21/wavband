@@ -1,6 +1,4 @@
-let socket;
-
-
+// setup ui variables
 let logo;
 let headphonesym;
 let batt;
@@ -33,7 +31,7 @@ let connectedCheck = false;
 const legend1 = "0 db";
 const legend2 = '0 norm.';
 
-//slider stuff
+// setup slider variables
 let ypos1 = 220;
 let ypos2 = 220;
 let box;
@@ -50,127 +48,140 @@ const responsetimetext1 = "response";
 const responsetimetext2 = "time";
 const responsetimetext3 = "10 sec";
 const responsetimetext4 = "1 sec";
-
 let lw = 1065;
 let lh = 90;
 let sx = 120;
-
 let ex = sx + lw;
-
 let ey = 190;
 let sy = 425;
 
-
+// setup EQ filter variables
 let eqLength = 8;
 let ref;
 const lFreq = 20;
 const hFreq = 20000;
 let ranges = [];
 let cFreqs = [];
-
 var gains = [0, 0, 0, 0, 0, 0, 0, 0];
 
-let micBuffer = [];
-let settingBuffer = false;
-
+// setup steady state variables
 var steadyStateErrors = [];
 var steadyStateTimes = [];
-
 let store = true;
 
-//let testMicData = new Array();
+// setup socket connection
+let socket;
+// setup global variable for incoming mic data
+let micDataGlobal = new Array();
 
+// preload assets (photos, .wav files)
 function preload() {
 
+    // load images
     logo = loadImage('assets/logo.png');
     headphonesym = loadImage('assets/headphonesym.png');
     batt = loadImage('assets/batt.png');
     statusgreen = loadImage('assets/statusgreen.png');
     statusred = loadImage('assets/statusred.png');
+    loggrid = loadImage('assets/loggrid3.png');
+    togglebuttON = loadImage('assets/corrON.png');
+    togglebuttOFF = loadImage('assets/corrOFF.png');
 
+    // load font
     font = loadFont('assets/abeatbyKaiRegular.otf');
 
-    loggrid = loadImage('assets/loggrid3.png');
-
+    // load test song
     filtered = loadSound('assets/imma.wav');
     ref = loadSound('assets/imma.wav');
     testMicData = loadSound('assets/char.wav');
 
-    togglebuttON = loadImage('assets/corrON.png');
-    togglebuttOFF = loadImage('assets/corrOFF.png');
+
 
 }
 
+// runs once before draw()
 function setup() {
 
+    //create canvas
     let cnv = createCanvas(windowWidth, windowHeight);
     cnv.background('white');
     cnv.mouseClicked(togglePlay);
 
+    //draw UI background
     drawBackground();
 
-    // // Start the socket connection
-    // socket = io('http://localhost:3000')
+    // Start the socket connection
+    socket = io('http://localhost:3000')
 
-    // // Callback function
-    // socket.on('httpServer', data => {
+    // Callback function
+    socket.on('httpServer', data => {
 
-    //     if (filtered.isPlaying()) {
-    //         var buf = bops.from(data, 'hex');
+        // if the song is playing, receive data, 
+        // perform FFT and set to global mic data var
+        if (filtered.isPlaying()) {
+            var buf = bops.from(data, 'hex');
 
-    //         var bufAr = Array.from(buf);
-    //         var ip = resizeArray(bufAr, 1024);
+            var bufAr = Array.from(buf);
+            var ip = resizeArray(bufAr, 1024);
 
-    //         for (var i = 0; i < buf.length; i++) {
-    //             ip[i] = bufAr[i];
-    //         }
+            for (var i = 0; i < buf.length; i++) {
+                ip[i] = bufAr[i];
+            }
 
-    //         var fftMic = new p5.FastFourierTransform(1024, 20000, 1024);
-    //         fftMic.doFrequency = true;
+            var fftMic = new p5.FastFourierTransform(1024, 20000, 1024);
+            fftMic.doFrequency = true;
 
-    //         fftMic.forward(ip);
+            fftMic.forward(ip);
 
-    //         //could use MAGNITUDE
-    //         var op = fftMic.real;
+            //could use MAGNITUDE
+            var op = fftMic.real;
 
-    //         //kill the DC gain
-    //         op[0] = 0;
+            //kill the DC gain
+            op[0] = 0;
 
-    //         let min = Math.min(...op);
-    //         let max = Math.max(...op);
+            let min = Math.min(...op);
+            let max = Math.max(...op);
 
-    //         //normalize to -140 to 0 dB and set gain directly
-    //         for (var i = 0; i < op.length; i++) {
-    //             op[i] = norm(op[i], min, max) * 255;
-    //         }
+            //normalize to 0 to 255 
+            for (var i = 0; i < op.length; i++) {
+                op[i] = norm(op[i], min, max) * 255;
+            }
 
-    //         testMicData = op;
-    //     }
-    // })
+            micDataGlobal = op;
+        }
+    })
 
+    // setup EQ for filtered audio
     eq = new p5.EQ(eqLength);
     setupEQ(eq);
     filtered.disconnect();
     eq.process(filtered);
 
+    //setup EQ for emulated mic data
     eqMic = new p5.EQ(eqLength);
     setupEQ(eqMic);
     testMicData.disconnect();
     eqMic.process(testMicData);
     eqMic.disconnect();
 
+    // setup FFT object for ref audio
     fft = new p5.FFT();
     fft.setInput(ref);
     ref.disconnect();
 
+    // setup FFT object for filtered audio
     fftFiltered = new p5.FFT();
     fftFiltered.setInput(eq);
 
+    // setup FFT object for mic audio
     fftMic = new p5.FFT();
     fftMic.setInput(eqMic);
 
 }
 
+// custom function to get average amplitude for each freq. band
+// only used with photon mic data
+// not updated for 8 bands
 function getAverage(op, band) {
 
     let sum = 0;
@@ -199,7 +210,7 @@ function getAverage(op, band) {
     return av
 }
 
-
+// function to set the low freq., high freq, and center freq. for each band
 function setupEQ(obj) {
     let BW = Math.log10(hFreq / lFreq) / eqLength;
     let cfreq = 0;
@@ -215,11 +226,9 @@ function setupEQ(obj) {
         ranges.push({ high: h, low: l });
 
     }
-
-    print("cFeqs: ", cFreqs);
-    print("ranges: ", ranges);
 }
 
+// function to draw background
 function drawBackground() {
 
     image(logo, 30, 5);
@@ -265,8 +274,10 @@ function drawBackground() {
     text(correctiontext, 910, 163);
 }
 
+// draw() runs at 60frames/s 
 function draw() {
 
+    // UI for correction mode on
     if (corrisON == true) {
         togglebuttON.resize(40, 20);
         image(togglebuttON, 855, 145);
@@ -282,9 +293,9 @@ function draw() {
         fill('white');
         noStroke();
 
-
     }
 
+    // UI for correction mode off
     if (corrisON == false) {
         togglebuttOFF.resize(40, 20);
         image(togglebuttOFF, 855, 145);
@@ -313,17 +324,12 @@ function draw() {
     image(loggrid, 100, 175);
 
 
-    //20.8microseconds to get data
-    //3900requests/sec (0.00025641s for one socket communication)
-    //draw is 60frames/sec (0.017s) -> 17ms to calculate FFT, update gain vals, draw signals
-    //well under 100ms
-    //timer to analyzeNodes - time to process 
+    //if the sound is playing, then analyze nodes
     if (filtered.isPlaying()) {
         analyzeNodes();
     }
 
-
-
+    //redraw the plot every time to avoid stacking 
     textSize(10);
     fill(105, 105, 109);
     text(drywettext1, 1220, 185);
@@ -350,6 +356,7 @@ function draw() {
 
 }
 
+// if user presses on plot, the song will toggle between play and pause
 function togglePlay() {
 
 
@@ -389,34 +396,40 @@ function togglePlay() {
     }
 }
 
-
+// logic to determine error in each freq. band
 function analyzeNodes() {
 
+    // perform FFT on each audio
     let refFFT = fft.analyze();
     let filteredFFT = fftFiltered.analyze();
     let micDataFFT = fftMic.analyze();
 
+    // draw each audio signal with freq. data
     drawSignals(refFFT, filteredFFT, micDataFFT);
 
     var vals = [0, 0, 0, 0, 0, 0, 0, 0];
     var low = 0;
     var high = 0;
 
+    //for each band
     for (var i = 0; i < eqLength; i++) {
 
         low = ranges[i].low;
         high = ranges[i].high;
 
+        // get average amplitude in current band
         let refEnergy = fft.getEnergy(low, high);
         let micEnergy = fftMic.getEnergy(low, high);
         //let micEnergy = getAverage(testMicData, i);
 
+        //calculate error
         let err = refEnergy - micEnergy;
 
         if (isNaN(err) || err == Infinity || err == -Infinity) {
             err = 0;
         }
 
+        //store error value
         vals[i] = err;
     }
 
@@ -431,13 +444,17 @@ function analyzeNodes() {
     //     store = false;
     // }
 
+    //if correction mode on, adjust filter gains
     if (corrisON) {
         adjustFilterGains(vals);
     }
 }
 
+// function to adjust filter gains
 function adjustFilterGains(vals) {
 
+    // for each freq. band
+    // apply P-control logic with error band of -/+ 1dB
     for (var i = 0; i < eqLength; i++) {
 
         let err = vals[i];
@@ -460,6 +477,7 @@ function adjustFilterGains(vals) {
 
 }
 
+// function to draw signals
 function drawSignals(refFFT, filteredFFT, micDataFFT) {
 
     //draw micData signal
@@ -537,18 +555,15 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     noStroke();
     fill(255, 230, 0);
 
-    //index of center frequencies: 60, 600, 6000
     let bins = [];
 
     if (eqLength == 3) {
+        //index of center frequencies: 60, 600, 6000
         bins = [4, 31, 256];
     } else {
+        //index of cFreqs: 30, 73, 173, 410, 973, 2309, 5476, 12987
         bins = [1.5, 3.7, 7.7, 20.5, 48, 111, 275, 555];
     }
-
-    //index of cFreqs: 30, 73, 173, 410, 973, 2309, 5476, 12987
-
-    print("GAINS: ", gains);
 
     for (let i = 0; i < eqLength; i++) {
 
@@ -562,16 +577,6 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
         strokeWeight(3);
         line(x, sy, x, h);
     }
-}
 
-function mouseDragged() {
-
-    if (mouseY >= (sliderlength + linestarty)) { mouseY = (linestarty + sliderlength); } else if (mouseY <= linestarty) { mouseY = linestarty; } else {
-        if (mouseX >= (linestartx + 50)) {
-            ypos2 = mouseY;
-            ypos1 = ypos1;
-        } else { ypos1 = mouseY; }
-
-    }
-
+    noStroke();
 }

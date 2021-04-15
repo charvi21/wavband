@@ -93,7 +93,7 @@ function preload() {
     // load test song
     filtered = loadSound('assets/imma.wav');
     ref = loadSound('assets/imma.wav');
-    testMicData = loadSound('assets/char.wav');
+    testMicData = loadSound('assets/walkingmic.wav');
 
 
 
@@ -106,6 +106,7 @@ function setup() {
     let cnv = createCanvas(windowWidth, windowHeight);
     cnv.background('white');
     cnv.mouseClicked(togglePlay);
+    noStroke();
 
     //draw UI background
     drawBackground();
@@ -263,6 +264,7 @@ function drawBackground() {
     //yellow
     fill(255, 230, 0);
     ellipse(730, 155, 20, 20);
+    noStroke();
 
     textSize(20);
     fill(105, 105, 109);
@@ -272,6 +274,20 @@ function drawBackground() {
     textSize(20);
     fill(105, 105, 109);
     text(correctiontext, 910, 163);
+
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext1, 1220, 185);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext2, 1230, 195);
+    textSize(10);
+    fill(105, 105, 109);
+    text(drywettext3, 1230, 215);
+
+
+
+
 }
 
 // draw() runs at 60frames/s 
@@ -309,7 +325,11 @@ function draw() {
         box = rect(linestartx - 12, sliderlength + ypos1 - 10, 25, 10);
         ogmousey = mouseY;
         fill('white');
-        noStroke();
+        //noStroke();
+        textSize(10);
+        fill(105, 105, 109);
+        text(drywettext4, 1235, sliderlength + 235);
+        fill('white');
 
     }
 
@@ -350,7 +370,6 @@ function draw() {
     textSize(8.5);
     fill(232, 198, 194);
     text(legend2, 110, 420);
-
 
     fill('white');
 
@@ -394,6 +413,7 @@ function togglePlay() {
         }
 
     }
+    noStroke();
 }
 
 // logic to determine error in each freq. band
@@ -502,6 +522,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
             px = x;
             py = h;
 
+
         }
     }
 
@@ -554,6 +575,7 @@ function drawSignals(refFFT, filteredFFT, micDataFFT) {
     //draw filter eqs
     noStroke();
     fill(255, 230, 0);
+    noStroke();
 
     let bins = [];
 

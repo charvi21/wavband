@@ -93,7 +93,9 @@ function preload() {
     // load test song
     filtered = loadSound('assets/imma.wav');
     ref = loadSound('assets/imma.wav');
-    testMicData = loadSound('assets/walkingmic.wav');
+    testMicData = loadSound('assets/char.wav');
+    //LOAD WALKING SOUND TO CORRECT FOR 10x10FT room requirement
+    //testMicData = loadSound('assets/walkingmic.wav');
 
 
 
